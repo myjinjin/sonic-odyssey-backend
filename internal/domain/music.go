@@ -14,6 +14,6 @@ type Music struct {
 
 	MusicGenreMapping      []MusicGenreMapping      `gorm:"foreignKey:MusicID"`
 	MusicArtistMapping     []MusicArtistMapping     `gorm:"foreignKey:MusicID"`
-	UserMusicLikes         []UserMusicLike          `gorm:"foreignKey:MusicID"`
+	UserLikes              []UserLike               `gorm:"foreignKey:MusicID"`
 	CollectionMusicMapping []CollectionMusicMapping `gorm:"foreignKey:MusicID"`
 }

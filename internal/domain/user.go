@@ -22,6 +22,6 @@ type User struct {
 	Followers          []UserFollow        `gorm:"foreignKey:FollowingID"`
 	Following          []UserFollow        `gorm:"foreignKey:FollowerID"`
 	UserTopsters       []UserTopster
-	UserMusicLikes     []UserMusicLike   `gorm:"foreignKey:UserID"`
+	UserLikes          []UserLike        `gorm:"foreignKey:UserID"`
 	MusicCollections   []MusicCollection `gorm:"foreignKey:UserID"`
 }

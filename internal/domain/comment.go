@@ -11,5 +11,5 @@ type Comment struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	UserMusicLikes []UserMusicLike `gorm:"foreignKey:CommentID"`
+	UserLikes []UserLike `gorm:"foreignKey:CommentID"`
 }

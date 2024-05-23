@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type GenresCommunity struct {
+type GenreCommunity struct {
 	ID          uint   `gorm:"primaryKey;autoIncrement"`
 	GenreID     uint   `gorm:"index"`
 	Name        string `gorm:"type:varchar(100)"`
