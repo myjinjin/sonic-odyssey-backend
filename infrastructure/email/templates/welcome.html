@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>Sonic Odyssey에 오신 것을 환영합니다!</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+
+            body {
+                font-family: 'Noto Sans KR', sans-serif;
+                font-size: 16px;
+                line-height: 1.5;
+                color: #333;
+            }
+            h1 {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 20px;
+            }
+            p {
+                margin-bottom: 15px;
+            }
+            ul {
+                margin-bottom: 20px;
+            }
+            li {
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>안녕하세요 {{ .Name }}님, Sonic Odyssey에 오신 것을 환영합니다!</h1>
+        <p>여기는 음악을 사랑하는 모든 사람들을 위한 커뮤니티입니다🤍</p>
+        <ul>
+            <li>🎶 ShareMusic: 좋아하는 음악을 다른 사람들과 나누고 새로운 곡들도 발견해보세요.</li>
+            <li>🎵 PlaylistMaker: {{ .Name }}님만의 플레이리스트를 만들어세요. 취향에 딱 맞는 곡들로 가득 채울 수 있어요.</li>
+            <li>🌟 Recommendations: 음악 취향을 분석해서 딱 맞는 음악을 추천해드릴게요. 새로운 음악을 찾는 재미를 느껴보세요.</li>
+            <li>📢 Community: 음악에 열정적인 친구들을 사귀고, 다 같이 음악에 대해 이야기해보아요.</li>
+        </ul>
+        <p>행운을 담아,</p>
+        <p>Sonic Odyssey</p>
+    </body>
+</html>
