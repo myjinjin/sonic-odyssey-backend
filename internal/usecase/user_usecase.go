@@ -6,8 +6,8 @@ import (
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/password"
-	"github.com/myjinjin/sonic-odyssey-backend/internal/domain"
-	"github.com/myjinjin/sonic-odyssey-backend/internal/repository"
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
 
 type SignUpInput struct {
@@ -26,12 +26,12 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	userRepo       repository.UserRepository
+	userRepo       repositories.UserRepository
 	passwordHasher password.PasswordHasher
 	emailSender    email.EmailSender
 }
 
-func NewUserUsecase(userRepo repository.UserRepository, passwordHasher password.PasswordHasher) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher password.PasswordHasher) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
@@ -64,7 +64,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, err
 	}
 
-	user := &domain.User{
+	user := &entities.User{
 		Email:        input.Email,
 		PasswordHash: hashedPassword,
 		Name:         input.Name,
