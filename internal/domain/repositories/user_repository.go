@@ -8,5 +8,5 @@ type UserRepository interface {
 	FindByEmail(email string) (*entities.User, error)
 	FindByNickname(nickname string) (*entities.User, error)
 	Update(user *entities.User) error
-	DeletE(id uint) error
+	Delete(id uint) error
 }
