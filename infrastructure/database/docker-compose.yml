@@ -1,0 +1,19 @@
+services:
+  sonic-odyssey-db:
+    image: postgres:16-bullseye
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: sonic_odyssey
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sonic-odyssey-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  sonic-odyssey-data:
+
+networks:
+  default:
+    name: sonic-odyssey-network
