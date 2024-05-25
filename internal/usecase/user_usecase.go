@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"unicode"
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
@@ -44,7 +43,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, err
 	}
 	if existingUser != nil {
-		return nil, errors.New("email already exists")
+		return nil, ErrEmailAlreadyExists
 	}
 
 	existingUser, err = u.userRepo.FindByNickname(input.Nickname)
@@ -52,7 +51,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, err
 	}
 	if existingUser != nil {
-		return nil, errors.New("nickname already exists")
+		return nil, ErrNicknameAlreadyExists
 	}
 
 	if err := validatePassword(input.Password); err != nil {
@@ -88,7 +87,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 
 func validatePassword(password string) error {
 	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
+		return ErrPasswordTooShort
 	}
 
 	hasUppercase := false
@@ -110,16 +109,16 @@ func validatePassword(password string) error {
 	}
 
 	if !hasUppercase {
-		return errors.New("password must contain at least one uppercase letter")
+		return ErrPasswordNoUppercase
 	}
 	if !hasLowercase {
-		return errors.New("password must contain at least one lowercase letter")
+		return ErrPasswordNoLowercase
 	}
 	if !hasNumber {
-		return errors.New("password must contain at least one number")
+		return ErrPasswordNoNumber
 	}
 	if !hasSpecialChar {
-		return errors.New("password must contain at least one special character")
+		return ErrPasswordNoSpecialChar
 	}
 
 	return nil
