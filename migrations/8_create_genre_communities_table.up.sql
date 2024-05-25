@@ -1,0 +1,8 @@
+CREATE TABLE genre_communities (
+    id SERIAL PRIMARY KEY,
+    genre_id INTEGER REFERENCES genres(id),
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
