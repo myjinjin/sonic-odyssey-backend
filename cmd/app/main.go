@@ -24,4 +24,12 @@ func main() {
 		log.Fatalf("faied to connect to the database: %v", err)
 	}
 	defer db.Close()
+
+	if err := db.InitMigrator(); err != nil {
+		log.Fatalf("faied to initialize migrator: %v", err)
+	}
+
+	if err := db.MigrateUp(); err != nil {
+		log.Fatalf("faied to run database migrations: %v", err)
+	}
 }

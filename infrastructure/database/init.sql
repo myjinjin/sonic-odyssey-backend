@@ -1,1 +1,1 @@
-CREATE DATABASE sonic_odyssey;
+CREATE DATABASE IF NOT EXISTS sonic_odyssey;

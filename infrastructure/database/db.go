@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	postgresmigrate "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Database struct {
-	db *gorm.DB
+	db       *gorm.DB
+	migrator *migrate.Migrate
 }
 
 func New(opts ...Option) (*Database, error) {
@@ -58,11 +62,45 @@ func New(opts ...Option) (*Database, error) {
 	return &Database{db: db}, nil
 }
 
+func (d *Database) InitMigrator() error {
+	sqlDB, err := d.db.DB()
+	if err != nil {
+		return err
+	}
+	driver, err := postgresmigrate.WithInstance(sqlDB, &postgresmigrate.Config{})
+	if err != nil {
+		return err
+	}
+	d.migrator, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Database) MigrateUp() error {
+	if err := d.migrator.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
+}
+
+func (d *Database) MigrateDown() error {
+	if err := d.migrator.Down(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
+}
+
 func (d *Database) GetDB() *gorm.DB {
 	return d.db
 }
 
 func (d *Database) Close() error {
+	if d.migrator != nil {
+		d.migrator.Close()
+	}
+
 	sqlDB, err := d.db.DB()
 	if err != nil {
 		return err
