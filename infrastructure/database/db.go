@@ -59,11 +59,6 @@ func NewDB(opts ...Option) (*Database, error) {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 
-	err = db.Exec("CREATE EXTENSION IF NOT EXISTS pgcrypto;").Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to create pgcrypto extension: %v", err)
-	}
-
 	return &Database{db: db}, nil
 }
 
