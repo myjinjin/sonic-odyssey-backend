@@ -43,7 +43,7 @@ func NewDB(opts ...Option) (*Database, error) {
 		return nil, fmt.Errorf("database name is required")
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s TimeZone=Asia/Seoul options='--client_encoding=UTF8'",
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.DBName, cfg.SSLMode)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -59,10 +59,15 @@ func NewDB(opts ...Option) (*Database, error) {
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 
+	err = db.Exec("CREATE EXTENSION IF NOT EXISTS pgcrypto;").Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to create pgcrypto extension: %v", err)
+	}
+
 	return &Database{db: db}, nil
 }
 
-func (d *Database) InitMigrator() error {
+func (d *Database) InitMigrator(migrationPath string) error {
 	sqlDB, err := d.db.DB()
 	if err != nil {
 		return err
@@ -71,7 +76,8 @@ func (d *Database) InitMigrator() error {
 	if err != nil {
 		return err
 	}
-	d.migrator, err = migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+
+	d.migrator, err = migrate.NewWithDatabaseInstance(fmt.Sprintf("file://%s", migrationPath), "postgres", driver)
 	if err != nil {
 		return err
 	}

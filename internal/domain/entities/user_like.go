@@ -12,13 +12,3 @@ type UserLike struct {
 
 	CreatedAt time.Time
 }
-
-/*
-TODO: add constraint
-
-ALTER TABLE user_likes ADD CONSTRAINT chk_user_likes_target CHECK (
-    (MusicID IS NOT NULL AND PostID IS NULL AND CommentID IS NULL) OR
-    (MusicID IS NULL AND PostID IS NOT NULL AND CommentID IS NULL) OR
-    (MusicID IS NULL AND PostID IS NULL AND CommentID IS NOT NULL)
-);
-*/

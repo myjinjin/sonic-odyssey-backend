@@ -1,4 +1,9 @@
-CREATE TYPE social_provider AS ENUM ('GOOGLE', 'KAKAO', 'NAVER', 'SPOTIFY');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'social_provider') THEN
+        CREATE TYPE social_provider AS ENUM ('GOOGLE', 'KAKAO', 'NAVER', 'SPOTIFY');
+    END IF;
+END$$;
 
 CREATE TABLE user_social_accounts (
     id SERIAL PRIMARY KEY,

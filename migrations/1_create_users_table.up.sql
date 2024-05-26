@@ -1,6 +1,7 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
+    email BYTEA NOT NULL,
+    email_hash VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     name VARCHAR(50) NOT NULL,
     nickname VARCHAR(50) UNIQUE NOT NULL,

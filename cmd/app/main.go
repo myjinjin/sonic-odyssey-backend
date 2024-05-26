@@ -6,7 +6,8 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/database"
-	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/password"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/controller/http"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
@@ -29,7 +30,7 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := db.InitMigrator(); err != nil {
+	if err := db.InitMigrator("migrations"); err != nil {
 		log.Fatalf("faied to initialize migrator: %v", err)
 	}
 
@@ -37,8 +38,13 @@ func main() {
 		log.Fatalf("faied to run database migrations: %v", err)
 	}
 
-	userRepo := postgresql.NewUserRepository(db.GetDB(), os.Getenv("DB_ENCRYPTION_KEY"))
-	userUsecase := usecase.NewUserUsecase(userRepo, password.BCryptPasswordHasher())
+	encryptor, err := encryption.NewAESEncryptor("")
+	if err != nil {
+		log.Fatal("failed to create encryptor:", err)
+	}
+
+	userRepo := postgresql.NewUserRepository(db.GetDB())
+	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor)
 
 	router := http.SetupRouter(userUsecase)
 

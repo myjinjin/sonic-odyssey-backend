@@ -4,7 +4,8 @@ import (
 	"unicode"
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
-	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/password"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
@@ -25,20 +26,27 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	userRepo       repositories.UserRepository
-	passwordHasher password.PasswordHasher
-	emailSender    email.EmailSender
+	userRepo repositories.UserRepository
+
+	passwordHasher hash.PasswordHasher
+	emailHasher    hash.EmailHasher
+	emailEncryptor encryption.Encryptor
+
+	emailSender email.EmailSender
 }
 
-func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher password.PasswordHasher) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
+		emailHasher:    emailHasher,
+		emailEncryptor: emailEncryptor,
 	}
 }
 
 func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
-	existingUser, err := u.userRepo.FindByEmail(input.Email)
+	hashedEmail := u.emailHasher.HashEmail(input.Email)
+	existingUser, err := u.userRepo.FindByEmailHash(hashedEmail)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +71,14 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, err
 	}
 
+	encryptedEmail, err := u.emailEncryptor.Encrypt(input.Email)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &entities.User{
-		Email:        input.Email,
+		Email:        encryptedEmail,
+		EmailHash:    hashedEmail,
 		PasswordHash: hashedPassword,
 		Name:         input.Name,
 		Nickname:     input.Nickname,

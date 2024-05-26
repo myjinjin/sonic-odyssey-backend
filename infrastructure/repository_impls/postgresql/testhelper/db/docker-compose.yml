@@ -1,17 +1,17 @@
 services:
-  sonic-odyssey-db:
+  sonic-odyssey-test-db:
     image: postgres:16-bullseye
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
-      POSTGRES_DB: sonic_odyssey
+      POSTGRES_DB: testdb
     ports:
-      - "5432:5432"
+      - "54320:5432"
     volumes:
-      - ./../../../sonic-odyssey-data:/var/lib/postgresql/data
+      - ./../../../../../../sonic-odyssey-test-data:/var/lib/postgresql/data
 
 volumes:
-  sonic-odyssey-data:
+  sonic-odyssey-test-data:
 
 networks:
   default:

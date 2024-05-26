@@ -8,7 +8,8 @@ import (
 
 type User struct {
 	ID           uint   `gorm:"primaryKey;autoIncrement"`
-	Email        string `gorm:"type:varchar(255);unique;"`
+	Email        string `gorm:"type:bytea"`               // AES-256 encrypted value
+	EmailHash    string `gorm:"type:varchar(255);unique"` // for duplication check
 	PasswordHash string `gorm:"type:varchar(255)"`
 	Name         string `gorm:"type:varchar(50)"`
 	Nickname     string `gorm:"type:varchar(50);unique"`

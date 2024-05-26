@@ -1,83 +1,75 @@
 package postgresql
 
 import (
+	"errors"
+
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/apperrors"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	db            *gorm.DB
-	encryptionKey string
+	db *gorm.DB
 }
 
-func NewUserRepository(db *gorm.DB, encryptionKey string) repositories.UserRepository {
-	return &UserRepository{db: db, encryptionKey: encryptionKey}
+func NewUserRepository(db *gorm.DB) repositories.UserRepository {
+	return &UserRepository{db: db}
 }
 
 func (r *UserRepository) Create(user *entities.User) error {
-	encryptedEmail, err := r.encryptEmail(user.Email)
+	err := r.db.Create(user).Error
 	if err != nil {
-		return err
+		return apperrors.ErrCreate
 	}
-	user.Email = encryptedEmail
-
-	return r.db.Create(user).Error
+	return nil
 }
+
 func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 	user := new(entities.User)
 	err := r.db.First(user, id).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrNotFound
+		}
+		return nil, apperrors.ErrFind
 	}
-	user.Email, err = r.decryptEmail(user.Email)
 	return user, err
 }
-func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
-	encryptedEmail, err := r.encryptEmail(email)
-	if err != nil {
-		return nil, err
-	}
 
+func (r *UserRepository) FindByEmailHash(hashedEmail string) (*entities.User, error) {
 	user := new(entities.User)
-	if err = r.db.Where("email = ?", encryptedEmail).First(user).Error; err != nil {
-		return nil, err
+	if err := r.db.Where("email_hash = ?", hashedEmail).First(user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrNotFound
+		}
+		return nil, apperrors.ErrFind
 	}
-	user.Email = email
-	return user, err
+	return user, nil
 }
 
 func (r *UserRepository) FindByNickname(nickname string) (*entities.User, error) {
 	user := new(entities.User)
 	err := r.db.Where("nickname = ?", nickname).First(user).Error
 	if err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperrors.ErrNotFound
+		}
+		return nil, apperrors.ErrFind
 	}
-	user.Email, err = r.decryptEmail(user.Email)
 	return user, err
 }
 
 func (r *UserRepository) Update(user *entities.User) error {
-	encryptedEmail, err := r.encryptEmail(user.Email)
-	if err != nil {
-		return err
+	if err := r.db.Save(user).Error; err != nil {
+		return apperrors.ErrUpdate
 	}
-	user.Email = encryptedEmail
-	return r.db.Save(user).Error
+	return nil
 }
 
 func (r *UserRepository) Delete(id uint) error {
-	return r.db.Delete(&entities.User{}, id).Error
-}
-
-func (r *UserRepository) encryptEmail(email string) (string, error) {
-	var encryptedEmail string
-	err := r.db.Raw("SELECT pgp_sym_encrypt(?, ?) AS encrypted_email", email, r.encryptionKey).Scan(&encryptedEmail).Error
-	return encryptedEmail, err
-}
-
-func (r *UserRepository) decryptEmail(encryptedEmail string) (string, error) {
-	var email string
-	err := r.db.Raw("SELECT pgp_sym_decrypt(?::bytea, ?)::text AS email", encryptedEmail, r.encryptionKey).Scan(&email).Error
-	return email, err
+	if err := r.db.Delete(&entities.User{}, id).Error; err != nil {
+		return apperrors.ErrDelete
+	}
+	return nil
 }
