@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./sonic-odyssey-data:/var/lib/postgresql/data
+      - ./../../../sonic-odyssey-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 volumes:

@@ -16,7 +16,7 @@ type Database struct {
 	migrator *migrate.Migrate
 }
 
-func New(opts ...Option) (*Database, error) {
+func NewDB(opts ...Option) (*Database, error) {
 	cfg := &DBConfig{
 		SSLMode:         "disable",
 		MaxOpenConns:    100,
