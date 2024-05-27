@@ -17,12 +17,12 @@ import (
 var (
 	userRepo repositories.UserRepository
 	testdb   *database.Database
-	logger   *zap.Logger
+	logger   logging.Logger
 )
 
 func init() {
 	var err error
-	logger, err = logging.NewLogger(true)
+	logger, err = logging.NewZapLogger(true)
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}

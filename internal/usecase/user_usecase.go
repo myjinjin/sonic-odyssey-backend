@@ -7,6 +7,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/logging"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
@@ -34,15 +35,18 @@ type userUsecase struct {
 	emailEncryptor encryption.Encryptor
 
 	emailSender email.EmailSender
+
+	logger logging.Logger
 }
 
-func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor, emailSender email.EmailSender, logger logging.Logger) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
 		emailHasher:    emailHasher,
 		emailEncryptor: emailEncryptor,
 		emailSender:    emailSender,
+		logger:         logger,
 	}
 }
 
@@ -91,6 +95,11 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 
 	welcomeData := email.WelcomeData{Name: input.Name}
 	if err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData); err != nil {
+		u.logger.Error("failed to send welcome email",
+			"error", err,
+			"email", input.Email,
+			"name", input.Name,
+		)
 		return nil, ErrSendingEmail
 	}
 

@@ -45,7 +45,6 @@ func (r *TemplateRenderer) loadTemplates() error {
 
 	for _, t := range templates.Templates() {
 		name := filepath.Base(t.Name())
-		name = name[:len(name)-len(filepath.Ext(name))]
 		r.templates[name] = t
 	}
 

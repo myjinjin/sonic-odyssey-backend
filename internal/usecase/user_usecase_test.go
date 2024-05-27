@@ -16,8 +16,9 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -71,8 +72,9 @@ func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -116,8 +118,9 @@ func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -162,8 +165,9 @@ func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	// Test cases for invalid passwords
 	invalidPasswords := []string{
@@ -213,8 +217,9 @@ func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -254,8 +259,9 @@ func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -297,8 +303,9 @@ func TestUserUsecase_SignUp_EmailSendingFailed(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -343,8 +350,9 @@ func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
+	logger := &mocks.Logger{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender, logger)
 
 	input := SignUpInput{
 		Email:    "test@example.com",

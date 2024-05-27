@@ -9,15 +9,22 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/logging"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
 	v1 "github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/v1"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
+	"go.uber.org/zap"
 )
 
 func main() {
-	err := godotenv.Load()
+	logger, err := logging.NewZapLogger(true)
 	if err != nil {
-		log.Fatalf("failed to load .env file: %v", err)
+		log.Fatalf("failed to initialize logger: %v", err)
+	}
+
+	err = godotenv.Load()
+	if err != nil {
+		logger.Fatal("failed to load .env file: %v", zap.Error(err))
 	}
 	db, err := database.NewDB(
 		database.WithHost(os.Getenv("DB_HOST")),
@@ -27,21 +34,21 @@ func main() {
 		database.WithDBName(os.Getenv("DB_NAME")),
 	)
 	if err != nil {
-		log.Fatalf("faied to connect to the database: %v", err)
+		logger.Fatal("faied to connect to the database: %v", zap.Error(err))
 	}
 	defer db.Close()
 
 	if err := db.InitMigrator("migrations"); err != nil {
-		log.Fatalf("faied to initialize migrator: %v", err)
+		logger.Fatal("faied to initialize migrator: %v", zap.Error(err))
 	}
 
 	if err := db.MigrateUp(); err != nil {
-		log.Fatalf("faied to run database migrations: %v", err)
+		logger.Fatal("faied to run database migrations: %v", zap.Error(err))
 	}
 
 	encryptor, err := encryption.NewAESEncryptor(os.Getenv("DB_ENCRYPTION_KEY"))
 	if err != nil {
-		log.Fatal("failed to create encryptor:", err)
+		logger.Fatal("failed to create encryptor:", zap.Error(err))
 	}
 
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -52,16 +59,16 @@ func main() {
 
 	emailSender, err := email.NewSMTPEmailSender(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress)
 	if err != nil {
-		log.Fatal("failed to create email sender:", err)
+		logger.Fatal("failed to create email sender:", zap.Error(err))
 	}
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
-	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender)
+	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender, logger)
 
 	router := v1.SetupRouter(userUsecase)
 
 	err = router.Run(":8081")
 	if err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		logger.Fatal("failed to start server: %v", zap.Error(err))
 	}
 }

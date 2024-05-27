@@ -26,7 +26,7 @@ func (r *UserRepository) Create(user *entities.User) error {
 
 func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 	user := new(entities.User)
-	err := r.db.First(user, id).Error
+	err := r.db.First(&user, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound
@@ -38,7 +38,7 @@ func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 
 func (r *UserRepository) FindByEmailHash(hashedEmail string) (*entities.User, error) {
 	user := new(entities.User)
-	if err := r.db.Where("email_hash = ?", hashedEmail).First(user).Error; err != nil {
+	if err := r.db.Where("email_hash = ?", hashedEmail).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound
 		}
@@ -49,7 +49,7 @@ func (r *UserRepository) FindByEmailHash(hashedEmail string) (*entities.User, er
 
 func (r *UserRepository) FindByNickname(nickname string) (*entities.User, error) {
 	user := new(entities.User)
-	err := r.db.Where("nickname = ?", nickname).First(user).Error
+	err := r.db.Where("nickname = ?", nickname).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound
