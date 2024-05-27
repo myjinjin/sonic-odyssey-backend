@@ -39,7 +39,7 @@ func main() {
 		log.Fatalf("faied to run database migrations: %v", err)
 	}
 
-	encryptor, err := encryption.NewAESEncryptor("")
+	encryptor, err := encryption.NewAESEncryptor(os.Getenv("DB_ENCRYPTION_KEY"))
 	if err != nil {
 		log.Fatal("failed to create encryptor:", err)
 	}
