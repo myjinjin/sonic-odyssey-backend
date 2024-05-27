@@ -10,7 +10,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
-	"github.com/myjinjin/sonic-odyssey-backend/internal/controller/http"
+	v1 "github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/v1"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
 )
 
@@ -58,7 +58,7 @@ func main() {
 	userRepo := postgresql.NewUserRepository(db.GetDB())
 	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender)
 
-	router := http.SetupRouter(userUsecase)
+	router := v1.SetupRouter(userUsecase)
 
 	err = router.Run(":8081")
 	if err != nil {

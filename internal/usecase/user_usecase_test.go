@@ -10,12 +10,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-//go:generate mockery --name=UserRepository --dir=../domain/repositories --output=./mocks
-//go:generate mockery --name=PasswordHasher --dir=../../infrastructure/hash --output=./mocks
-//go:generate mockery --name=EmailHasher --dir=../../infrastructure/hash --output=./mocks
-//go:generate mockery --name=Encryptor --dir=../../infrastructure/encryption --output=./mocks
-//go:generate mockery --name=EmailSender --dir=../../infrastructure/email --output=./mocks
-
 func TestUserUsecase_SignUp_Success(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}

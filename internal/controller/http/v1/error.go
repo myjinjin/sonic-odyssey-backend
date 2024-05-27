@@ -18,7 +18,7 @@ func (e ControllerError) Error() string {
 
 func HandleError(c *gin.Context, err error) {
 	switch e := err.(type) {
-	case *ControllerError:
+	case ControllerError:
 		c.JSON(e.StatusCode, gin.H{"error": e.Err.Error()})
 	case error:
 		switch e {
