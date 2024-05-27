@@ -21,21 +21,10 @@ func NewUserController(userUsecase usecase.UserUsecase) UserController {
 	}
 }
 
-type SignUpRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
-	Nickname string `json:"nickname" binding:"required"`
-}
-
-type SignUpResponse struct {
-	UserID uint `json:"user_id"`
-}
-
 func (u *userController) SignUp(c *gin.Context) {
 	var req SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		HandleError(c, ControllerError{Err: err, StatusCode: http.StatusBadRequest})
+		HandleError(c, ErrInvalidRequestBody)
 		return
 	}
 
@@ -48,12 +37,7 @@ func (u *userController) SignUp(c *gin.Context) {
 
 	output, err := u.userUsecase.SignUp(input)
 	if err != nil {
-		switch err {
-		case usecase.ErrEmailAlreadyExists, usecase.ErrNicknameAlreadyExists:
-			HandleError(c, ControllerError{Err: err, StatusCode: http.StatusBadRequest})
-		default:
-			HandleError(c, err)
-		}
+		HandleError(c, err)
 		return
 	}
 

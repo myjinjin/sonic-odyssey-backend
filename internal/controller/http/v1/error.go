@@ -1,34 +1,47 @@
 package v1
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
 )
 
-type ControllerError struct {
-	Err        error
-	StatusCode int
-}
+var (
+	ErrInvalidRequestBody = errors.New("invalid request body")
+)
 
-func (e ControllerError) Error() string {
-	return e.Err.Error()
+var errorStatusMap = map[error]int{
+	usecase.ErrEmailAlreadyExists:    http.StatusBadRequest,
+	usecase.ErrNicknameAlreadyExists: http.StatusBadRequest,
+	usecase.ErrInvalidPassword:       http.StatusBadRequest,
+	usecase.ErrUserNotFound:          http.StatusNotFound,
+
+	usecase.ErrPasswordTooShort:      http.StatusBadRequest,
+	usecase.ErrPasswordNoUppercase:   http.StatusBadRequest,
+	usecase.ErrPasswordNoLowercase:   http.StatusBadRequest,
+	usecase.ErrPasswordNoNumber:      http.StatusBadRequest,
+	usecase.ErrPasswordNoSpecialChar: http.StatusBadRequest,
+
+	usecase.ErrHashingPassword: http.StatusInternalServerError,
+	usecase.ErrEncryptingEmail: http.StatusInternalServerError,
+
+	usecase.ErrSendingEmail: http.StatusInternalServerError,
+
+	usecase.ErrCreatingRecord: http.StatusInternalServerError,
+	usecase.ErrFindingRecord:  http.StatusInternalServerError,
+	usecase.ErrUpatingRecord:  http.StatusInternalServerError,
+	usecase.ErrDeletingRecord: http.StatusInternalServerError,
+
+	ErrInvalidRequestBody: http.StatusBadRequest,
 }
 
 func HandleError(c *gin.Context, err error) {
-	switch e := err.(type) {
-	case ControllerError:
-		c.JSON(e.StatusCode, gin.H{"error": e.Err.Error()})
-	case error:
-		switch e {
-		case usecase.ErrEmailAlreadyExists, usecase.ErrNicknameAlreadyExists,
-			usecase.ErrPasswordTooShort, usecase.ErrPasswordNoUppercase,
-			usecase.ErrPasswordNoLowercase, usecase.ErrPasswordNoNumber,
-			usecase.ErrPasswordNoSpecialChar:
-			c.JSON(http.StatusBadRequest, gin.H{"error": e.Error()})
-		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		}
+	if status, ok := errorStatusMap[err]; ok {
+		c.JSON(status, NewErrorResponse(err))
+		return
 	}
+
+	c.JSON(http.StatusInternalServerError, NewErrorResponse(err))
 }
