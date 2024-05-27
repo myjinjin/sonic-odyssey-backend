@@ -1,6 +1,10 @@
 package usecase
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
+)
 
 var (
 	ErrEmailAlreadyExists    = errors.New("email already exists")
@@ -13,4 +17,14 @@ var (
 	ErrPasswordNoLowercase   = errors.New("password must contain at least one lowercase letter")
 	ErrPasswordNoNumber      = errors.New("password must contain at least one number")
 	ErrPasswordNoSpecialChar = errors.New("password must contain at least one special character")
+
+	ErrHashingPassword = errors.New("failed to hash password")
+	ErrEncryptingEmail = errors.New("failed to encrypt email")
+
+	ErrSendingEmail = errors.New("failed to send email")
+
+	ErrCreatingRecord = repositories.ErrCreate
+	ErrFindingRecord  = repositories.ErrFind
+	ErrUpatingRecord  = repositories.ErrUpdate
+	ErrDeletingRecord = repositories.ErrDelete
 )

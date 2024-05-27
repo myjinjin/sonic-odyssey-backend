@@ -1,12 +1,12 @@
 package usecase
 
 import (
+	"errors"
 	"unicode"
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
-	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/apperrors"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
@@ -49,16 +49,16 @@ func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.Pa
 func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	hashedEmail := u.emailHasher.HashEmail(input.Email)
 	existingUser, err := u.userRepo.FindByEmailHash(hashedEmail)
-	if err != nil && err != apperrors.ErrNotFound {
-		return nil, err
+	if err != nil && errors.Is(err, repositories.ErrFind) {
+		return nil, ErrFindingRecord
 	}
 	if existingUser != nil {
 		return nil, ErrEmailAlreadyExists
 	}
 
 	existingUser, err = u.userRepo.FindByNickname(input.Nickname)
-	if err != nil && err != apperrors.ErrNotFound {
-		return nil, err
+	if err != nil && errors.Is(err, repositories.ErrFind) {
+		return nil, ErrFindingRecord
 	}
 	if existingUser != nil {
 		return nil, ErrNicknameAlreadyExists
@@ -70,12 +70,12 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 
 	hashedPassword, err := u.passwordHasher.HashPassword(input.Password)
 	if err != nil {
-		return nil, err
+		return nil, ErrHashingPassword
 	}
 
 	encryptedEmail, err := u.emailEncryptor.Encrypt(input.Email)
 	if err != nil {
-		return nil, err
+		return nil, ErrEncryptingEmail
 	}
 
 	user := &entities.User{
@@ -86,12 +86,12 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		Nickname:     input.Nickname,
 	}
 	if err := u.userRepo.Create(user); err != nil {
-		return nil, err
+		return nil, ErrCreatingRecord
 	}
 
 	welcomeData := email.WelcomeData{Name: input.Name}
 	if err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData); err != nil {
-		return nil, err
+		return nil, ErrSendingEmail
 	}
 
 	output := &SignUpOutput{

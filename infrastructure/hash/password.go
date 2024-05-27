@@ -18,7 +18,12 @@ func BCryptPasswordHasher() PasswordHasher {
 func (b bcryptPasswordHasher) HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
-		return "", err
+		switch err {
+		case bcrypt.ErrPasswordTooLong:
+			return "", ErrPasswordTooLong
+		default:
+			return "", ErrHashingFailure
+		}
 	}
 	return string(bytes), nil
 }

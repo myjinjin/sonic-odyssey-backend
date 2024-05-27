@@ -3,7 +3,6 @@ package postgresql
 import (
 	"errors"
 
-	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/apperrors"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 	"gorm.io/gorm"
@@ -20,7 +19,7 @@ func NewUserRepository(db *gorm.DB) repositories.UserRepository {
 func (r *UserRepository) Create(user *entities.User) error {
 	err := r.db.Create(user).Error
 	if err != nil {
-		return apperrors.ErrCreate
+		return repositories.ErrCreate
 	}
 	return nil
 }
@@ -30,20 +29,20 @@ func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 	err := r.db.First(user, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperrors.ErrNotFound
+			return nil, repositories.ErrNotFound
 		}
-		return nil, apperrors.ErrFind
+		return nil, repositories.ErrFind
 	}
-	return user, err
+	return user, nil
 }
 
 func (r *UserRepository) FindByEmailHash(hashedEmail string) (*entities.User, error) {
 	user := new(entities.User)
 	if err := r.db.Where("email_hash = ?", hashedEmail).First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperrors.ErrNotFound
+			return nil, repositories.ErrNotFound
 		}
-		return nil, apperrors.ErrFind
+		return nil, repositories.ErrFind
 	}
 	return user, nil
 }
@@ -53,23 +52,23 @@ func (r *UserRepository) FindByNickname(nickname string) (*entities.User, error)
 	err := r.db.Where("nickname = ?", nickname).First(user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperrors.ErrNotFound
+			return nil, repositories.ErrNotFound
 		}
-		return nil, apperrors.ErrFind
+		return nil, repositories.ErrFind
 	}
-	return user, err
+	return user, nil
 }
 
 func (r *UserRepository) Update(user *entities.User) error {
 	if err := r.db.Save(user).Error; err != nil {
-		return apperrors.ErrUpdate
+		return repositories.ErrUpdate
 	}
 	return nil
 }
 
 func (r *UserRepository) Delete(id uint) error {
 	if err := r.db.Delete(&entities.User{}, id).Error; err != nil {
-		return apperrors.ErrDelete
+		return repositories.ErrDelete
 	}
 	return nil
 }

@@ -33,17 +33,17 @@ func NewAESEncryptor(key string) (Encryptor, error) {
 func (e *aesEncryptor) Encrypt(plaintext string) (string, error) {
 	c, err := aes.NewCipher(e.key)
 	if err != nil {
-		return "", err
+		return "", ErrCreatingCipher
 	}
 
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return "", err
+		return "", ErrCreatingGCMCipher
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return "", err
+		return "", ErrGeneratingNonce
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
@@ -53,28 +53,28 @@ func (e *aesEncryptor) Encrypt(plaintext string) (string, error) {
 func (e *aesEncryptor) Decrypt(ciphertext string) (string, error) {
 	ct, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
-		return "", err
+		return "", ErrDecodingBase64Data
 	}
 
 	c, err := aes.NewCipher(e.key)
 	if err != nil {
-		return "", err
+		return "", ErrCreatingCipher
 	}
 
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return "", err
+		return "", ErrCreatingGCMCipher
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(ct) < nonceSize {
-		return "", errors.New("ciphertext too short")
+		return "", ErrCipherTextTooShort
 	}
 
 	nonce, encryptedText := ct[:nonceSize], ct[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, encryptedText, nil)
 	if err != nil {
-		return "", err
+		return "", ErrDecryptingData
 	}
 
 	return string(plaintext), nil

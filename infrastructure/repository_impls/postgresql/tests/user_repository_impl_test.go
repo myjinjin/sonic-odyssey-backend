@@ -3,8 +3,8 @@ package tests
 import (
 	"testing"
 
-	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/apperrors"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +46,7 @@ func TestUserRepository_Create(t *testing.T) {
 				Name:         "username2",
 				Nickname:     "usernickname2",
 			},
-			expectedErr: apperrors.ErrCreate,
+			expectedErr: repositories.ErrCreate,
 		},
 		{
 			name: "DuplicateNickname",
@@ -57,7 +57,7 @@ func TestUserRepository_Create(t *testing.T) {
 				Name:         "username3",
 				Nickname:     "existingnickname",
 			},
-			expectedErr: apperrors.ErrCreate,
+			expectedErr: repositories.ErrCreate,
 		},
 	}
 

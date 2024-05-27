@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
@@ -230,14 +229,14 @@ func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return("", errors.New("hashing failed"))
+	passwordHasher.On("HashPassword", input.Password).Return("", ErrHashingPassword)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)
 
 	// Assert
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "hashing failed")
+	assert.Contains(t, err.Error(), ErrHashingPassword.Error())
 	assert.Nil(t, output)
 
 	// Verify
@@ -273,14 +272,14 @@ func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
 	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
-	emailEncryptor.On("Encrypt", input.Email).Return("", errors.New("encryption failed"))
+	emailEncryptor.On("Encrypt", input.Email).Return("", ErrEncryptingEmail)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)
 
 	// Assert
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "encryption failed")
+	assert.Contains(t, err.Error(), ErrEncryptingEmail.Error())
 	assert.Nil(t, output)
 
 	// Verify
@@ -319,14 +318,14 @@ func TestUserUsecase_SignUp_EmailSendingFailed(t *testing.T) {
 	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
 	emailEncryptor.On("Encrypt", input.Email).Return(encryptedEmail, nil)
 	userRepo.On("Create", mock.AnythingOfType("*entities.User")).Return(nil)
-	emailSender.On("SendEmail", input.Email, "Welcome to the sonic odyssey~!", "welcome.html", mock.AnythingOfType("email.WelcomeData")).Return(errors.New("sending failed"))
+	emailSender.On("SendEmail", input.Email, "Welcome to the sonic odyssey~!", "welcome.html", mock.AnythingOfType("email.WelcomeData")).Return(ErrSendingEmail)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)
 
 	// Assert
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "sending failed")
+	assert.Contains(t, err.Error(), ErrSendingEmail.Error())
 	assert.Nil(t, output)
 
 	// Verify
@@ -364,14 +363,14 @@ func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
 	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
 	emailEncryptor.On("Encrypt", input.Email).Return(encryptedEmail, nil)
-	userRepo.On("Create", mock.AnythingOfType("*entities.User")).Return(errors.New("creation failed"))
+	userRepo.On("Create", mock.AnythingOfType("*entities.User")).Return(ErrCreatingRecord)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)
 
 	// Assert
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "creation failed")
+	assert.Contains(t, err.Error(), ErrCreatingRecord.Error())
 	assert.Nil(t, output)
 
 	// Verify
