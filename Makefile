@@ -1,4 +1,4 @@
-.PHONY: db-up db-down run clean testdb testdb-up testdb-down test
+.PHONY: db-up db-down run clean test test-db-setup test-db-teardown run-tests generate
 
 db-up:
 	docker-compose -f infrastructure/database/docker-compose.yml up -d
@@ -13,18 +13,22 @@ clean:
 	docker-compose -f infrastructure/database/docker-compose.yml down -v
 	rm -rf infrastructure/database/data
 
-testdb: testdb-up test testdb-down
+test: test-db-setup run-tests test-db-teardown
 
-testdb-up:
+test-db-setup:
 	@echo "Starting test database..."
 	docker-compose -f infrastructure/repository_impls/postgresql/testhelper/db/docker-compose.yml up -d
 	@echo "Waiting for test database to be ready..."
-	sleep 5
+	chmod +x infrastructure/repository_impls/postgresql/testhelper/db/wait-for-db.sh
+	./infrastructure/repository_impls/postgresql/testhelper/db/wait-for-db.sh localhost 54320 echo "Test database is ready"
 
-testdb-down:
+test-db-teardown:
 	@echo "Stopping test database..."
 	docker-compose -f infrastructure/repository_impls/postgresql/testhelper/db/docker-compose.yml down
 
-test:
+run-tests:
 	@echo "Running tests..."
-	go test -v ./infrastructure/repository_impls/postgresql/tests/...
+	go test -v ./...
+
+generate:
+	go generate ./...

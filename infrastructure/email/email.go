@@ -12,6 +12,14 @@ import (
 //go:embed templates/*.html
 var embeddedTemplates embed.FS
 
+type WelcomeData struct {
+	Name string
+}
+
+type EmailSender interface {
+	SendEmail(to, subject, templateName string, data interface{}) error
+}
+
 type TemplateRenderer struct {
 	templates map[string]*template.Template
 }
@@ -59,10 +67,6 @@ func (r *TemplateRenderer) RenderTemplate(name string, data interface{}) (string
 	return buf.String(), nil
 }
 
-type EmailSender interface {
-	SendEmail(to, templateName string, data interface{}) error
-}
-
 type SMTPEmailSender struct {
 	smtpHost         string
 	smtpPort         string
@@ -72,7 +76,7 @@ type SMTPEmailSender struct {
 	templateRenderer *TemplateRenderer
 }
 
-func NewSMTPEmailSender(host, port, username, password, fromAddress, templateDir string) (*SMTPEmailSender, error) {
+func NewSMTPEmailSender(host, port, username, password, fromAddress string) (*SMTPEmailSender, error) {
 	renderer, err := NewTemplateRenderer()
 	if err != nil {
 		return nil, err
@@ -95,13 +99,17 @@ func (s *SMTPEmailSender) SendEmail(to, subject, templateName string, data inter
 	}
 
 	auth := smtp.PlainAuth("", s.username, s.password, s.smtpHost)
-	message := fmt.Sprintf("To: %s\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n%s", to, body)
-	if err := smtp.SendMail(s.smtpHost+":"+s.smtpPort, auth, s.fromAddress, []string{to}, []byte(message)); err != nil {
+	message := []byte(fmt.Sprintf("To: %s\r\n", to) +
+		fmt.Sprintf("From: %s\r\n", s.fromAddress) +
+		fmt.Sprintf("Subject: %s\r\n", subject) +
+		"MIME-version: 1.0;\r\n" +
+		"Content-Type: text/html; charset=\"UTF-8\";\r\n" +
+		"\r\n" +
+		body)
+
+	err = smtp.SendMail(s.smtpHost+":"+s.smtpPort, auth, s.fromAddress, []string{to}, message)
+	if err != nil {
 		return err
 	}
 	return nil
-}
-
-type WelcomeData struct {
-	Name string
 }

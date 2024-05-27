@@ -6,6 +6,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/apperrors"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
@@ -35,19 +36,20 @@ type userUsecase struct {
 	emailSender email.EmailSender
 }
 
-func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
 		emailHasher:    emailHasher,
 		emailEncryptor: emailEncryptor,
+		emailSender:    emailSender,
 	}
 }
 
 func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	hashedEmail := u.emailHasher.HashEmail(input.Email)
 	existingUser, err := u.userRepo.FindByEmailHash(hashedEmail)
-	if err != nil {
+	if err != nil && err != apperrors.ErrNotFound {
 		return nil, err
 	}
 	if existingUser != nil {
@@ -55,7 +57,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	}
 
 	existingUser, err = u.userRepo.FindByNickname(input.Nickname)
-	if err != nil {
+	if err != nil && err != apperrors.ErrNotFound {
 		return nil, err
 	}
 	if existingUser != nil {
@@ -88,7 +90,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	}
 
 	welcomeData := email.WelcomeData{Name: input.Name}
-	if err := u.emailSender.SendEmail(input.Email, "welcome", welcomeData); err != nil {
+	if err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData); err != nil {
 		return nil, err
 	}
 

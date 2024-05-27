@@ -6,6 +6,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/database"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
@@ -43,8 +44,19 @@ func main() {
 		log.Fatal("failed to create encryptor:", err)
 	}
 
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpPort := os.Getenv("SMTP_PORT")
+	smtpUsername := os.Getenv("SMTP_USERNAME")
+	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	smtpFromAddress := os.Getenv("SMTP_FROM_ADDRESS")
+
+	emailSender, err := email.NewSMTPEmailSender(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress)
+	if err != nil {
+		log.Fatal("failed to create email sender:", err)
+	}
+
 	userRepo := postgresql.NewUserRepository(db.GetDB())
-	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor)
+	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender)
 
 	router := http.SetupRouter(userUsecase)
 
