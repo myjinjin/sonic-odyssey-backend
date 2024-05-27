@@ -1,4 +1,4 @@
-.PHONY: db-up db-down run clean test test-db-setup test-db-teardown run-tests generate
+.PHONY: db-up db-down run clean test test-db-setup test-db-teardown run-tests generate swag
 
 db-up:
 	docker-compose -f infrastructure/database/docker-compose.yml up -d
@@ -32,3 +32,6 @@ run-tests:
 
 generate:
 	go generate ./...
+
+swag:
+	swag init -g ./cmd/app/main.go

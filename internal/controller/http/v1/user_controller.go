@@ -21,6 +21,17 @@ func NewUserController(userUsecase usecase.UserUsecase) UserController {
 	}
 }
 
+// SignUp godoc
+// @Summary User SignUp
+// @Description User SignUp
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param request body SignUpRequest true "SignUp Request"
+// @Success 201 {object} SignUpResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/users [post]
 func (u *userController) SignUp(c *gin.Context) {
 	var req SignUpRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
