@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -17,14 +16,9 @@ import (
 )
 
 func main() {
-	logger, err := logging.NewZapLogger(true)
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("failed to initialize logger: %v", err)
-	}
-
-	err = godotenv.Load()
-	if err != nil {
-		logger.Fatal("failed to load .env file: %v", zap.Error(err))
+		logging.Log().Fatal("failed to load .env file: %v", zap.Error(err))
 	}
 	db, err := database.NewDB(
 		database.WithHost(os.Getenv("DB_HOST")),
@@ -34,21 +28,21 @@ func main() {
 		database.WithDBName(os.Getenv("DB_NAME")),
 	)
 	if err != nil {
-		logger.Fatal("faied to connect to the database: %v", zap.Error(err))
+		logging.Log().Fatal("faied to connect to the database: %v", zap.Error(err))
 	}
 	defer db.Close()
 
 	if err := db.InitMigrator("migrations"); err != nil {
-		logger.Fatal("faied to initialize migrator: %v", zap.Error(err))
+		logging.Log().Fatal("faied to initialize migrator: %v", zap.Error(err))
 	}
 
 	if err := db.MigrateUp(); err != nil {
-		logger.Fatal("faied to run database migrations: %v", zap.Error(err))
+		logging.Log().Fatal("faied to run database migrations: %v", zap.Error(err))
 	}
 
 	encryptor, err := encryption.NewAESEncryptor(os.Getenv("DB_ENCRYPTION_KEY"))
 	if err != nil {
-		logger.Fatal("failed to create encryptor:", zap.Error(err))
+		logging.Log().Fatal("failed to create encryptor:", zap.Error(err))
 	}
 
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -59,16 +53,16 @@ func main() {
 
 	emailSender, err := email.NewSMTPEmailSender(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress)
 	if err != nil {
-		logger.Fatal("failed to create email sender:", zap.Error(err))
+		logging.Log().Fatal("failed to create email sender:", zap.Error(err))
 	}
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
-	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender, logger)
+	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender)
 
 	router := v1.SetupRouter(userUsecase)
 
 	err = router.Run(":8081")
 	if err != nil {
-		logger.Fatal("failed to start server: %v", zap.Error(err))
+		logging.Log().Fatal("failed to start server: %v", zap.Error(err))
 	}
 }
