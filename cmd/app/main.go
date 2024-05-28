@@ -4,10 +4,10 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/auth"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/database"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
-	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/logging"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
 	v1 "github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/v1"
@@ -42,7 +42,7 @@ func main() {
 
 	encryptor, err := encryption.NewAESEncryptor(os.Getenv("DB_ENCRYPTION_KEY"))
 	if err != nil {
-		logging.Log().Fatal("failed to create encryptor:", zap.Error(err))
+		logging.Log().Fatal("failed to create encryptor: ", zap.Error(err))
 	}
 
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -53,13 +53,26 @@ func main() {
 
 	emailSender, err := email.NewSMTPEmailSender(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress)
 	if err != nil {
-		logging.Log().Fatal("failed to create email sender:", zap.Error(err))
+		logging.Log().Fatal("failed to create email sender: ", zap.Error(err))
 	}
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
-	userUsecase := usecase.NewUserUsecase(userRepo, hash.BCryptPasswordHasher(), hash.SHA256EmailHasher(), encryptor, emailSender)
+	userUsecase := usecase.NewUserUsecase(userRepo, encryptor, emailSender)
+	userJwt := auth.NewUserJWT(userRepo)
 
-	router := v1.SetupRouter(userUsecase)
+	jwtAuth, err := auth.NewJWTMiddleware(
+		auth.WithKey([]byte(os.Getenv("JWT_SECRET_KEY"))),
+		auth.WithPayloadFunc(userJwt.PayloadFunc),
+		auth.WithIdentityHandler(userJwt.IdentityHandler),
+		auth.WithAuthenticator(userJwt.Authenticator),
+		auth.WithAuthorizator(userJwt.Authorizator),
+		auth.WithUnauthorized(userJwt.Unauthorized),
+		auth.WithLoginResponse(userJwt.LoginResponse),
+	)
+	if err != nil {
+		logging.Log().Fatal("failed to create jwt auth middleware: ", zap.Error(err))
+	}
+	router := v1.SetupRouter(userUsecase, jwtAuth)
 
 	err = router.Run(":8081")
 	if err != nil {

@@ -17,7 +17,6 @@ type JWTMiddlewareOption func(*jwt.GinJWTMiddleware)
 
 func NewJWTMiddleware(opts ...JWTMiddlewareOption) (*JWTMiddleware, error) {
 	cfg := &jwt.GinJWTMiddleware{
-		// Default options
 		Realm:         "sonic odyssey",
 		Timeout:       time.Hour,
 		MaxRefresh:    time.Hour,
@@ -25,37 +24,14 @@ func NewJWTMiddleware(opts ...JWTMiddlewareOption) (*JWTMiddleware, error) {
 		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
-
-		// Required options (must be provided via WithXXX functions)
-		// Key:             []byte(""),
-		// PayloadFunc:     nil,
-		// IdentityHandler: nil,
-		// Authenticator:   nil,
-		// Authorizator:    nil,
-		// Unauthorized:    nil,
 	}
 
 	for _, opt := range opts {
 		opt(cfg)
 	}
 
-	return &JWTMiddleware{
-		GinJWTMiddleware: &jwt.GinJWTMiddleware{
-			Realm:           cfg.Realm,
-			Key:             cfg.Key,
-			Timeout:         cfg.Timeout,
-			MaxRefresh:      cfg.MaxRefresh,
-			IdentityKey:     cfg.IdentityKey,
-			PayloadFunc:     cfg.PayloadFunc,
-			IdentityHandler: cfg.IdentityHandler,
-			Authenticator:   cfg.Authenticator,
-			Authorizator:    cfg.Authorizator,
-			Unauthorized:    cfg.Unauthorized,
-			TokenLookup:     cfg.TokenLookup,
-			TokenHeadName:   cfg.TokenHeadName,
-			TimeFunc:        cfg.TimeFunc,
-		},
-	}, nil
+	md, err := jwt.New(cfg)
+	return &JWTMiddleware{md}, err
 }
 
 // Required option functions
@@ -111,5 +87,11 @@ func WithTimeout(d time.Duration) JWTMiddlewareOption {
 func WithMaxRefresh(d time.Duration) JWTMiddlewareOption {
 	return func(cfg *jwt.GinJWTMiddleware) {
 		cfg.MaxRefresh = d
+	}
+}
+
+func WithLoginResponse(fn func(c *gin.Context, code int, token string, expire time.Time)) JWTMiddlewareOption {
+	return func(cfg *jwt.GinJWTMiddleware) {
+		cfg.LoginResponse = fn
 	}
 }

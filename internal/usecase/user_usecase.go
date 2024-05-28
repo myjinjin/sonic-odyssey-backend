@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"time"
 	"unicode"
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
@@ -29,27 +30,21 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	userRepo repositories.UserRepository
-
-	passwordHasher hash.PasswordHasher
-	emailHasher    hash.EmailHasher
+	userRepo       repositories.UserRepository
 	emailEncryptor encryption.Encryptor
-
-	emailSender email.EmailSender
+	emailSender    email.EmailSender
 }
 
-func NewUserUsecase(userRepo repositories.UserRepository, passwordHasher hash.PasswordHasher, emailHasher hash.EmailHasher, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
 	return &userUsecase{
 		userRepo:       userRepo,
-		passwordHasher: passwordHasher,
-		emailHasher:    emailHasher,
 		emailEncryptor: emailEncryptor,
 		emailSender:    emailSender,
 	}
 }
 
 func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
-	hashedEmail := u.emailHasher.HashEmail(input.Email)
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	existingUser, err := u.userRepo.FindByEmailHash(hashedEmail)
 	if err != nil && errors.Is(err, repositories.ErrFind) {
 		return nil, ErrFindingRecord
@@ -70,7 +65,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, err
 	}
 
-	hashedPassword, err := u.passwordHasher.HashPassword(input.Password)
+	hashedPassword, err := hash.BCryptPasswordHasher().HashPassword(input.Password)
 	if err != nil {
 		return nil, ErrHashingPassword
 	}
@@ -91,15 +86,32 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		return nil, ErrCreatingRecord
 	}
 
-	welcomeData := email.WelcomeData{Name: input.Name}
-	if err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData); err != nil {
-		logging.Log().Error("failed to send welcome email",
-			zap.Error(err),
-			zap.String("email", input.Email),
-			zap.String("name", input.Name),
-		)
-		return nil, ErrSendingEmail
-	}
+	go func() {
+		welcomeData := email.WelcomeData{Name: input.Name}
+		err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData)
+		if err != nil {
+			logging.Log().Error("failed to send welcome email",
+				zap.Error(err),
+				zap.String("email", input.Email),
+				zap.String("name", input.Name),
+			)
+
+			retries := 3
+			for i := 0; i < retries; i++ {
+				time.Sleep(time.Second * time.Duration(i+1))
+				err = u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData)
+				if err == nil {
+					break
+				}
+				logging.Log().Error("failed to send welcome email, retrying...",
+					zap.Error(err),
+					zap.String("email", input.Email),
+					zap.String("name", input.Name),
+					zap.Int("retry", i+1),
+				)
+			}
+		}
+	}()
 
 	output := &SignUpOutput{
 		UserID: user.ID,

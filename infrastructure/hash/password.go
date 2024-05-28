@@ -1,6 +1,8 @@
 package hash
 
 import (
+	"sync"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -9,10 +11,16 @@ type PasswordHasher interface {
 	CheckPasswordHash(password, hash string) bool
 }
 
+var (
+	oncePassword sync.Once
+	bcryptHasher PasswordHasher
+)
+
 type bcryptPasswordHasher struct{}
 
 func BCryptPasswordHasher() PasswordHasher {
-	return &bcryptPasswordHasher{}
+	oncePassword.Do(func() { bcryptHasher = &bcryptPasswordHasher{} })
+	return bcryptHasher
 }
 
 func (b bcryptPasswordHasher) HashPassword(password string) (string, error) {

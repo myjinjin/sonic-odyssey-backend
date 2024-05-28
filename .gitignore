@@ -24,3 +24,5 @@ go.work
 **/.DS_Store
 .env
 **/sonic-odyssey-data
+
+.vscode
