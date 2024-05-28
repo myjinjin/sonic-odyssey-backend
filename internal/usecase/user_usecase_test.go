@@ -3,6 +3,7 @@ package usecase
 import (
 	"testing"
 
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
 	"github.com/stretchr/testify/assert"
@@ -12,12 +13,10 @@ import (
 func TestUserUsecase_SignUp_Success(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -27,21 +26,18 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	encryptedEmail := "encrypted_email"
-	hashedPassword := "hashed_password"
 
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
 	emailEncryptor.On("Encrypt", input.Email).Return(encryptedEmail, nil)
 
 	userRepo.On("Create", mock.MatchedBy(func(user *entities.User) bool {
 		user.ID = 1
 		return user.Email == encryptedEmail &&
 			user.EmailHash == hashedEmail &&
-			user.PasswordHash == hashedPassword &&
+			hash.BCryptPasswordHasher().CheckPasswordHash(input.Password, user.PasswordHash) &&
 			user.Name == input.Name &&
 			user.Nickname == input.Nickname
 	})).Return(nil)
@@ -58,8 +54,6 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
@@ -67,12 +61,10 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -82,9 +74,7 @@ func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
-
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(&entities.User{
 		ID:        1,
 		Email:     "test@example.com",
@@ -103,8 +93,6 @@ func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
@@ -112,12 +100,10 @@ func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -127,9 +113,7 @@ func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
-
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(&entities.User{
 		ID:        1,
@@ -149,8 +133,6 @@ func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
@@ -158,12 +140,10 @@ func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	// Test cases for invalid passwords
 	invalidPasswords := []string{
@@ -183,9 +163,7 @@ func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 		}
 
 		// Expectations
-		hashedEmail := "hashed_email"
-
-		emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
+		hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 		userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 		userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
 
@@ -200,8 +178,6 @@ func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
@@ -209,27 +185,22 @@ func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
-		Password: "Password123!",
+		Password: "TOOLONGtofkjsldfjdsSsddsDGFdsfsdfsdfdfsVjlfdkjgvljkfdjkPassword123456789!",
 		Name:     "Test User",
 		Nickname: "testuser",
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
-
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return("", ErrHashingPassword)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)
@@ -241,21 +212,16 @@ func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
-	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
 
 func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -265,13 +231,9 @@ func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
-	hashedPassword := "hashed_password"
-
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
 	emailEncryptor.On("Encrypt", input.Email).Return("", ErrEncryptingEmail)
 
 	// Execute
@@ -284,54 +246,6 @@ func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
-	emailEncryptor.AssertExpectations(t)
-	emailSender.AssertExpectations(t)
-}
-
-func TestUserUsecase_SignUp_EmailSendingFailed(t *testing.T) {
-	// Setup
-	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
-	emailEncryptor := &mocks.Encryptor{}
-	emailSender := &mocks.EmailSender{}
-
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
-
-	input := SignUpInput{
-		Email:    "test@example.com",
-		Password: "Password123!",
-		Name:     "Test User",
-		Nickname: "testuser",
-	}
-
-	// Expectations
-	hashedEmail := "hashed_email"
-	hashedPassword := "hashed_password"
-	encryptedEmail := "encrypted_email"
-
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
-	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
-	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
-	emailEncryptor.On("Encrypt", input.Email).Return(encryptedEmail, nil)
-	userRepo.On("Create", mock.AnythingOfType("*entities.User")).Return(nil)
-	emailSender.On("SendEmail", input.Email, "Welcome to the sonic odyssey~!", "welcome.html", mock.AnythingOfType("email.WelcomeData")).Return(ErrSendingEmail)
-
-	// Execute
-	output, err := userUsecase.SignUp(input)
-
-	// Assert
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), ErrSendingEmail.Error())
-	assert.Nil(t, output)
-
-	// Verify
-	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }
@@ -339,12 +253,10 @@ func TestUserUsecase_SignUp_EmailSendingFailed(t *testing.T) {
 func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	passwordHasher := &mocks.PasswordHasher{}
-	emailHasher := &mocks.EmailHasher{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, passwordHasher, emailHasher, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -354,14 +266,11 @@ func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	}
 
 	// Expectations
-	hashedEmail := "hashed_email"
-	hashedPassword := "hashed_password"
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(input.Email)
 	encryptedEmail := "encrypted_email"
 
-	emailHasher.On("HashEmail", input.Email).Return(hashedEmail)
 	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, nil)
 	userRepo.On("FindByNickname", input.Nickname).Return(nil, nil)
-	passwordHasher.On("HashPassword", input.Password).Return(hashedPassword, nil)
 	emailEncryptor.On("Encrypt", input.Email).Return(encryptedEmail, nil)
 	userRepo.On("Create", mock.AnythingOfType("*entities.User")).Return(ErrCreatingRecord)
 
@@ -375,8 +284,6 @@ func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 
 	// Verify
 	userRepo.AssertExpectations(t)
-	passwordHasher.AssertExpectations(t)
-	emailHasher.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
 }

@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/auth"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/mocks"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
+	mocks2 "github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -17,8 +20,22 @@ import (
 func TestUserController_SignUp(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
+	mockUserRepo := new(mocks2.UserRepository)
 	mockUserUsecase := new(mocks.UserUsecase)
-	testRouter := SetupRouter(mockUserUsecase)
+	userJwt := auth.NewUserJWT(mockUserRepo)
+	testUserJwtAuth, err := auth.NewJWTMiddleware(
+		auth.WithKey([]byte(os.Getenv("JWT_SECRET_KEY"))),
+		auth.WithPayloadFunc(userJwt.PayloadFunc),
+		auth.WithIdentityHandler(userJwt.IdentityHandler),
+		auth.WithAuthenticator(userJwt.Authenticator),
+		auth.WithAuthorizator(userJwt.Authorizator),
+		auth.WithUnauthorized(userJwt.Unauthorized),
+		auth.WithLoginResponse(userJwt.LoginResponse),
+	)
+	if err != nil {
+		t.Fatalf("failed to create jwt auth middleware: %v", err)
+	}
+	testRouter := SetupRouter(mockUserUsecase, testUserJwtAuth)
 
 	t.Run("Success", func(t *testing.T) {
 		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
