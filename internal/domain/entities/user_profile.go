@@ -12,7 +12,6 @@ type UserProfile struct {
 	ProfileImageURL string `gorm:"type:varchar(255)"`
 	Bio             string `gorm:"type:varchar(500)"`
 	Website         string `gorm:"type:varchar(255)"`
-	UserAgreedAt    time.Time
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
