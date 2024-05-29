@@ -45,9 +45,12 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 		userGroup := apiV1.Group("/users")
 		{
 			userGroup.POST("", userController.SignUp)
-			userGroup.POST("/sign-in", jwtAuth.LoginHandler)
 		}
 
+		authGroup := apiV1.Group("/auth")
+		{
+			authGroup.POST("/sign-in", jwtAuth.LoginHandler)
+		}
 	}
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

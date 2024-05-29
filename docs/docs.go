@@ -15,6 +15,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/auth/sign-in": {
+            "post": {
+                "description": "Responds with a JWT token and expiration time upon successful login",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User Login",
+                "parameters": [
+                    {
+                        "description": "Login Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/auth.UnauthorizedResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/auth.UnauthorizedResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "description": "User SignUp",
@@ -25,7 +71,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "users"
                 ],
                 "summary": "User SignUp",
                 "parameters": [
@@ -63,6 +109,41 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "auth.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "odyssey@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "Example123!"
+                }
+            }
+        },
+        "auth.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2024-05-30T09:00:00Z"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                }
+            }
+        },
+        "auth.UnauthorizedResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "incorrect Username or Password"
+                }
+            }
+        },
         "v1.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -81,17 +162,21 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "user@example.com"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "nickname": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "johndoe"
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 8
+                    "minLength": 8,
+                    "example": "password123"
                 }
             }
         },
@@ -99,7 +184,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }

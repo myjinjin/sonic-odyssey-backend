@@ -10,15 +10,6 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
 
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type UserPayload struct {
-	Nickname string `json:"nickname"`
-}
-
 type UserJWT interface {
 	Authenticator(c *gin.Context) (interface{}, error)
 	PayloadFunc(data interface{}) jwt.MapClaims
@@ -28,12 +19,29 @@ type UserJWT interface {
 	LoginResponse(c *gin.Context, code int, token string, time time.Time)
 }
 
+type userJWT struct {
+	userRepo repositories.UserRepository
+}
+
 func NewUserJWT(userRepo repositories.UserRepository) UserJWT {
 	return &userJWT{userRepo}
 }
 
-type userJWT struct {
-	userRepo repositories.UserRepository
+type LoginRequest struct {
+	Email    string `json:"email" example:"odyssey@example.com"`
+	Password string `json:"password" example:"Example123!"`
+}
+
+type UserPayload struct {
+	Nickname string `json:"nickname"`
+}
+type LoginResponse struct {
+	ExpiresAt time.Time `json:"expires_at" example:"2024-05-30T09:00:00Z"`
+	Token     string    `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+}
+
+type UnauthorizedResponse struct {
+	Error string `json:"error" example:"incorrect Username or Password"`
 }
 
 func (u *userJWT) Authenticator(c *gin.Context) (interface{}, error) {
@@ -78,9 +86,20 @@ func (u *userJWT) Authorizator(data interface{}, c *gin.Context) bool {
 }
 
 func (u *userJWT) Unauthorized(c *gin.Context, code int, message string) {
-	c.JSON(code, gin.H{"error": message})
+	c.JSON(code, UnauthorizedResponse{Error: message})
 }
 
+// LoginResponse godoc
+// @Summary      User Login
+// @Description  Responds with a JWT token and expiration time upon successful login
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param 		 request body   LoginRequest	true "Login Request"
+// @Success      200  {object}  LoginResponse
+// @Failure      400  {object}  UnauthorizedResponse
+// @Failure      401  {object}  UnauthorizedResponse
+// @Router       /api/v1/auth/sign-in [post]
 func (u *userJWT) LoginResponse(c *gin.Context, code int, token string, time time.Time) {
-	c.JSON(code, gin.H{"expires_at": time, "token": token})
+	c.JSON(code, LoginResponse{ExpiresAt: time, Token: token})
 }

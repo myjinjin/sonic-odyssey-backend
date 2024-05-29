@@ -24,7 +24,7 @@ func NewUserController(userUsecase usecase.UserUsecase) UserController {
 // SignUp godoc
 // @Summary User SignUp
 // @Description User SignUp
-// @Tags User
+// @Tags users
 // @Accept json
 // @Produce json
 // @Param request body SignUpRequest true "SignUp Request"
