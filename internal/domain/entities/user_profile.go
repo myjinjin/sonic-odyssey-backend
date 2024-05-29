@@ -8,10 +8,10 @@ import (
 
 type UserProfile struct {
 	ID              uint   `gorm:"primaryKey;autoIncrement"`
-	UserID          uint   `gorm:"index"`
-	ProfileImageURL string `gorm:"type:varchar(255)"`
-	Bio             string `gorm:"type:varchar(500)"`
-	Website         string `gorm:"type:varchar(255)"`
+	UserID          uint   `gorm:"foreignKey:ID"`
+	ProfileImageURL string `gorm:"type:varchar(255);default:''"`
+	Bio             string `gorm:"type:varchar(500);default:''"`
+	Website         string `gorm:"type:varchar(255);default:''"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

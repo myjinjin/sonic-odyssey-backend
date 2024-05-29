@@ -18,7 +18,7 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	UserProfiles       UserProfile
+	UserProfile        *UserProfile        `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	UserSocialAccounts []UserSocialAccount `gorm:"foreignKey:UserID"`
 	Followers          []UserFollow        `gorm:"foreignKey:FollowingID"`
 	Following          []UserFollow        `gorm:"foreignKey:FollowerID"`

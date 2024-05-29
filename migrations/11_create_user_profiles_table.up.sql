@@ -1,6 +1,6 @@
 CREATE TABLE user_profiles (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER UNIQUE REFERENCES users(id),
+    user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     profile_image_url VARCHAR(255),
     bio VARCHAR(500),
     website VARCHAR(255),

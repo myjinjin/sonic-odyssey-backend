@@ -81,6 +81,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 		PasswordHash: hashedPassword,
 		Name:         input.Name,
 		Nickname:     input.Nickname,
+		UserProfile:  &entities.UserProfile{},
 	}
 	if err := u.userRepo.Create(user); err != nil {
 		return nil, ErrCreatingRecord
