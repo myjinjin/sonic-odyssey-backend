@@ -7,17 +7,30 @@ import (
 	"html/template"
 	"net/smtp"
 	"path/filepath"
+	"strings"
+
+	"golang.org/x/net/html"
 )
 
 //go:embed templates/*.html
 var embeddedTemplates embed.FS
 
+const (
+	TemplateWelcome       = "welcome.html"
+	TemplatePasswordReset = "password_reset.html"
+)
+
 type WelcomeData struct {
 	Name string
 }
 
+type PasswordResetData struct {
+	Name      string
+	ResetLink string
+}
+
 type EmailSender interface {
-	SendEmail(to, subject, templateName string, data interface{}) error
+	SendEmail(to, templateName string, data interface{}) error
 }
 
 type TemplateRenderer struct {
@@ -91,8 +104,13 @@ func NewSMTPEmailSender(host, port, username, password, fromAddress string) (*SM
 	}, nil
 }
 
-func (s *SMTPEmailSender) SendEmail(to, subject, templateName string, data interface{}) error {
+func (s *SMTPEmailSender) SendEmail(to, templateName string, data interface{}) error {
 	body, err := s.templateRenderer.RenderTemplate(templateName, data)
+	if err != nil {
+		return err
+	}
+
+	subject, err := extractTitle(body)
 	if err != nil {
 		return err
 	}
@@ -111,4 +129,28 @@ func (s *SMTPEmailSender) SendEmail(to, subject, templateName string, data inter
 		return err
 	}
 	return nil
+}
+
+func extractTitle(body string) (string, error) {
+	doc, err := html.Parse(strings.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+
+	var title string
+	var traverse func(n *html.Node)
+	traverse = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "title" {
+			if n.FirstChild != nil {
+				title = n.FirstChild.Data
+			}
+			return
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			traverse(c)
+		}
+	}
+	traverse(doc)
+
+	return title, nil
 }

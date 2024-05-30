@@ -26,20 +26,24 @@ type SignUpOutput struct {
 }
 
 type UserUsecase interface {
-	SignUp(input SignUpInput) (*SignUpOutput, error)
+	SignUp(SignUpInput) (*SignUpOutput, error)
+	SendPasswordRecoveryEmail(email string) error
 }
 
 type userUsecase struct {
-	userRepo       repositories.UserRepository
+	userRepo          repositories.UserRepository
+	passwordResetRepo repositories.PasswordResetFlowRepository
+
 	emailEncryptor encryption.Encryptor
 	emailSender    email.EmailSender
 }
 
-func NewUserUsecase(userRepo repositories.UserRepository, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
+func NewUserUsecase(userRepo repositories.UserRepository, passwordResetRepo repositories.PasswordResetFlowRepository, emailEncryptor encryption.Encryptor, emailSender email.EmailSender) UserUsecase {
 	return &userUsecase{
-		userRepo:       userRepo,
-		emailEncryptor: emailEncryptor,
-		emailSender:    emailSender,
+		userRepo:          userRepo,
+		passwordResetRepo: passwordResetRepo,
+		emailEncryptor:    emailEncryptor,
+		emailSender:       emailSender,
 	}
 }
 
@@ -89,7 +93,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 
 	go func() {
 		welcomeData := email.WelcomeData{Name: input.Name}
-		err := u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData)
+		err := u.emailSender.SendEmail(input.Email, email.TemplateWelcome, welcomeData)
 		if err != nil {
 			logging.Log().Error("failed to send welcome email",
 				zap.Error(err),
@@ -100,7 +104,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 			retries := 3
 			for i := 0; i < retries; i++ {
 				time.Sleep(time.Second * time.Duration(i+1))
-				err = u.emailSender.SendEmail(input.Email, "Welcome to the sonic odyssey~!", "welcome.html", welcomeData)
+				err = u.emailSender.SendEmail(input.Email, email.TemplateWelcome, welcomeData)
 				if err == nil {
 					break
 				}
@@ -119,6 +123,47 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	}
 
 	return output, nil
+}
+
+func (u *userUsecase) SendPasswordRecoveryEmail(userEmail string) error {
+	user, err := u.userRepo.FindByEmailHash(hash.SHA256EmailHasher().HashEmail(userEmail))
+	if err != nil {
+		if errors.Is(err, repositories.ErrFind) {
+			return ErrFindingRecord
+		}
+		if errors.Is(err, repositories.ErrNotFound) {
+			return ErrUserNotFound
+		}
+	}
+
+	go func() {
+		passwordResetData := email.PasswordResetData{Name: user.Name}
+		err := u.emailSender.SendEmail(userEmail, email.TemplatePasswordReset, passwordResetData)
+		if err != nil {
+			logging.Log().Error("failed to send password reset email",
+				zap.Error(err),
+				zap.String("email", userEmail),
+				zap.String("name", user.Name),
+			)
+
+			retries := 3
+			for i := 0; i < retries; i++ {
+				time.Sleep(time.Second * time.Duration(i+1))
+				err = u.emailSender.SendEmail(userEmail, email.TemplatePasswordReset, passwordResetData)
+				if err == nil {
+					break
+				}
+				logging.Log().Error("failed to send password reset email, retrying...",
+					zap.Error(err),
+					zap.String("email", userEmail),
+					zap.String("name", user.Name),
+					zap.Int("retry", i+1),
+				)
+			}
+		}
+	}()
+
+	return nil
 }
 
 func validatePassword(password string) error {

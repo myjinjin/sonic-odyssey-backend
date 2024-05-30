@@ -3,6 +3,7 @@ package usecase
 import (
 	"testing"
 
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
@@ -42,7 +43,7 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 			user.Nickname == input.Nickname
 	})).Return(nil)
 
-	emailSender.On("SendEmail", input.Email, "Welcome to the sonic odyssey~!", "welcome.html", mock.AnythingOfType("email.WelcomeData")).Return(nil)
+	emailSender.On("SendEmail", input.Email, email.TemplateWelcome, mock.AnythingOfType("email.WelcomeData")).Return(nil)
 
 	// Execute
 	output, err := userUsecase.SignUp(input)

@@ -57,7 +57,8 @@ func main() {
 	}
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
-	userUsecase := usecase.NewUserUsecase(userRepo, encryptor, emailSender)
+	passwordResetRepo := postgresql.NewPasswordResetFlowRepository(db.GetDB())
+	userUsecase := usecase.NewUserUsecase(userRepo, passwordResetRepo, encryptor, emailSender)
 	userJwt := auth.NewUserJWT(userRepo)
 
 	jwtAuth, err := auth.NewJWTMiddleware(
