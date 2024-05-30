@@ -16,6 +16,7 @@ import (
 
 var (
 	userRepo repositories.UserRepository
+	flowRepo repositories.PasswordResetFlowRepository
 	testdb   *database.Database
 	logger   logging.Logger
 )
@@ -42,6 +43,7 @@ func TestMain(m *testing.M) {
 	defer testdb.Close()
 
 	userRepo = postgresql.NewUserRepository(testdb.GetDB())
+	flowRepo = postgresql.NewPasswordResetFlowRepository(testdb.GetDB())
 	code := m.Run()
 
 	os.Exit(code)

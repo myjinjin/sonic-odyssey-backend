@@ -24,7 +24,7 @@ test-db-setup:
 
 test-db-teardown:
 	@echo "Stopping test database..."
-	docker-compose -f infrastructure/repository_impls/postgresql/testhelper/db/docker-compose.yml down
+	docker-compose -f infrastructure/repository_impls/postgresql/testhelper/db/docker-compose.yml down -v
 
 run-tests:
 	@echo "Running tests..."

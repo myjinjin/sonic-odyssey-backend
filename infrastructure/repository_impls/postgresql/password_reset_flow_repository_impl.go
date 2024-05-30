@@ -24,9 +24,9 @@ func (r *PasswordResetFlowRepository) Create(flow *entities.PasswordResetFlow) e
 	return nil
 }
 
-func (r *PasswordResetFlowRepository) FindByID(id uint) (*entities.PasswordResetFlow, error) {
+func (r *PasswordResetFlowRepository) FindByFlowID(flowID string) (*entities.PasswordResetFlow, error) {
 	flow := new(entities.PasswordResetFlow)
-	err := r.db.First(&flow, id).Error
+	err := r.db.Where("flow_id = ?", flowID).First(&flow).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound
@@ -48,8 +48,8 @@ func (r *PasswordResetFlowRepository) FindByUserID(userID uint) (*entities.Passw
 	return flow, nil
 }
 
-func (r *PasswordResetFlowRepository) Delete(id uint) error {
-	if err := r.db.Delete(&entities.PasswordResetFlow{}, id).Error; err != nil {
+func (r *PasswordResetFlowRepository) DeleteByFlowID(flowID string) error {
+	if err := r.db.Where("flow_id = ?", flowID).Delete(&entities.PasswordResetFlow{}).Error; err != nil {
 		return repositories.ErrDelete
 	}
 	return nil
