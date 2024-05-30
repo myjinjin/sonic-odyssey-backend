@@ -4,6 +4,5 @@ CREATE TABLE password_reset_flows (
     flow_id VARCHAR(255) UNIQUE NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_password_reset_flows_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
