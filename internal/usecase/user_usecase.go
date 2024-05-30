@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"time"
 	"unicode"
 
+	"github.com/google/uuid"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
@@ -27,7 +29,7 @@ type SignUpOutput struct {
 
 type UserUsecase interface {
 	SignUp(SignUpInput) (*SignUpOutput, error)
-	SendPasswordRecoveryEmail(email string) error
+	SendPasswordRecoveryEmail(baseURL, email string) error
 }
 
 type userUsecase struct {
@@ -125,7 +127,7 @@ func (u *userUsecase) SignUp(input SignUpInput) (*SignUpOutput, error) {
 	return output, nil
 }
 
-func (u *userUsecase) SendPasswordRecoveryEmail(userEmail string) error {
+func (u *userUsecase) SendPasswordRecoveryEmail(baseURL, userEmail string) error {
 	user, err := u.userRepo.FindByEmailHash(hash.SHA256EmailHasher().HashEmail(userEmail))
 	if err != nil {
 		if errors.Is(err, repositories.ErrFind) {
@@ -136,8 +138,19 @@ func (u *userUsecase) SendPasswordRecoveryEmail(userEmail string) error {
 		}
 	}
 
+	passwordResetFlow := &entities.PasswordResetFlow{
+		UserID:    user.ID,
+		FlowID:    generateFlowID(),
+		ExpiresAt: func() *time.Time { t := time.Now().Add(time.Hour * 2); return &t }(),
+	}
+	if err := u.passwordResetRepo.Create(passwordResetFlow); err != nil {
+		return ErrCreatingRecord
+	}
+
+	resetLink := fmt.Sprintf("%s/password/recovery?flow_d=%s", baseURL, passwordResetFlow.FlowID)
+
 	go func() {
-		passwordResetData := email.PasswordResetData{Name: user.Name}
+		passwordResetData := email.PasswordResetData{Name: user.Name, ResetLink: resetLink}
 		err := u.emailSender.SendEmail(userEmail, email.TemplatePasswordReset, passwordResetData)
 		if err != nil {
 			logging.Log().Error("failed to send password reset email",
@@ -203,4 +216,10 @@ func validatePassword(password string) error {
 	}
 
 	return nil
+}
+
+func generateFlowID() string {
+	currentTime := time.Now().Unix()
+	uuidValue := uuid.New()
+	return fmt.Sprintf("%s:%d", uuidValue.String(), currentTime)
 }

@@ -12,9 +12,27 @@ type UserUsecase struct {
 	mock.Mock
 }
 
-// SignUp provides a mock function with given fields: input
-func (_m *UserUsecase) SignUp(input usecase.SignUpInput) (*usecase.SignUpOutput, error) {
-	ret := _m.Called(input)
+// SendPasswordRecoveryEmail provides a mock function with given fields: email
+func (_m *UserUsecase) SendPasswordRecoveryEmail(email string) error {
+	ret := _m.Called(email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendPasswordRecoveryEmail")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(email)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SignUp provides a mock function with given fields: _a0
+func (_m *UserUsecase) SignUp(_a0 usecase.SignUpInput) (*usecase.SignUpOutput, error) {
+	ret := _m.Called(_a0)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SignUp")
@@ -23,10 +41,10 @@ func (_m *UserUsecase) SignUp(input usecase.SignUpInput) (*usecase.SignUpOutput,
 	var r0 *usecase.SignUpOutput
 	var r1 error
 	if rf, ok := ret.Get(0).(func(usecase.SignUpInput) (*usecase.SignUpOutput, error)); ok {
-		return rf(input)
+		return rf(_a0)
 	}
 	if rf, ok := ret.Get(0).(func(usecase.SignUpInput) *usecase.SignUpOutput); ok {
-		r0 = rf(input)
+		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*usecase.SignUpOutput)
@@ -34,7 +52,7 @@ func (_m *UserUsecase) SignUp(input usecase.SignUpInput) (*usecase.SignUpOutput,
 	}
 
 	if rf, ok := ret.Get(1).(func(usecase.SignUpInput) error); ok {
-		r1 = rf(input)
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}

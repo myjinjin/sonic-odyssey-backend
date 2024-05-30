@@ -9,17 +9,17 @@ type EmailSender struct {
 	mock.Mock
 }
 
-// SendEmail provides a mock function with given fields: to, subject, templateName, data
-func (_m *EmailSender) SendEmail(to string, subject string, templateName string, data interface{}) error {
-	ret := _m.Called(to, subject, templateName, data)
+// SendEmail provides a mock function with given fields: to, templateName, data
+func (_m *EmailSender) SendEmail(to string, templateName string, data interface{}) error {
+	ret := _m.Called(to, templateName, data)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendEmail")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, string, interface{}) error); ok {
-		r0 = rf(to, subject, templateName, data)
+	if rf, ok := ret.Get(0).(func(string, string, interface{}) error); ok {
+		r0 = rf(to, templateName, data)
 	} else {
 		r0 = ret.Error(0)
 	}

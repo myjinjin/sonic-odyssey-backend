@@ -1,6 +1,7 @@
 package tools
 
 //go:generate mockery --dir ../internal/domain/repositories --name UserRepository --output ../internal/usecase/mocks
+//go:generate mockery --dir ../internal/domain/repositories --name PasswordResetFlowRepository --output ../internal/usecase/mocks
 //go:generate mockery --dir ../infrastructure/logging --name Logger --output ../internal/usecase/mocks
 //go:generate mockery --dir ../infrastructure/hash --name PasswordHasher --output ../internal/usecase/mocks
 //go:generate mockery --dir ../infrastructure/hash --name EmailHasher --output ../internal/usecase/mocks

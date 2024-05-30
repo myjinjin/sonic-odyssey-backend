@@ -14,10 +14,11 @@ import (
 func TestUserUsecase_SignUp_Success(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -62,10 +63,11 @@ func TestUserUsecase_SignUp_Success(t *testing.T) {
 func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -101,10 +103,11 @@ func TestUserUsecase_SignUp_EmailAlreadyExists(t *testing.T) {
 func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -141,10 +144,11 @@ func TestUserUsecase_SignUp_NicknameAlreadyExists(t *testing.T) {
 func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	// Test cases for invalid passwords
 	invalidPasswords := []string{
@@ -186,10 +190,11 @@ func TestUserUsecase_SignUp_InvalidPassword(t *testing.T) {
 func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -219,10 +224,11 @@ func TestUserUsecase_SignUp_PasswordHashingFailed(t *testing.T) {
 func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
@@ -254,10 +260,11 @@ func TestUserUsecase_SignUp_EmailEncryptionFailed(t *testing.T) {
 func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
 	emailEncryptor := &mocks.Encryptor{}
 	emailSender := &mocks.EmailSender{}
 
-	userUsecase := NewUserUsecase(userRepo, emailEncryptor, emailSender)
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
 
 	input := SignUpInput{
 		Email:    "test@example.com",
