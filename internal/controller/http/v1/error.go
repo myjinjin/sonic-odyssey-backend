@@ -13,10 +13,12 @@ var (
 )
 
 var errorStatusMap = map[error]int{
-	usecase.ErrEmailAlreadyExists:    http.StatusBadRequest,
-	usecase.ErrNicknameAlreadyExists: http.StatusBadRequest,
-	usecase.ErrInvalidPassword:       http.StatusBadRequest,
-	usecase.ErrUserNotFound:          http.StatusNotFound,
+	usecase.ErrEmailAlreadyExists:        http.StatusBadRequest,
+	usecase.ErrNicknameAlreadyExists:     http.StatusBadRequest,
+	usecase.ErrInvalidPassword:           http.StatusBadRequest,
+	usecase.ErrUserNotFound:              http.StatusBadRequest,
+	usecase.ErrPasswordResetFlowNotFound: http.StatusBadRequest,
+	usecase.ErrPasswordResetFlowExpired:  http.StatusBadRequest,
 
 	usecase.ErrPasswordTooShort:      http.StatusBadRequest,
 	usecase.ErrPasswordNoUppercase:   http.StatusBadRequest,

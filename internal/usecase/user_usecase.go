@@ -30,6 +30,7 @@ type SignUpOutput struct {
 type UserUsecase interface {
 	SignUp(SignUpInput) (*SignUpOutput, error)
 	SendPasswordRecoveryEmail(baseURL, email string) error
+	ResetPassword(password, flowID string) error
 }
 
 type userUsecase struct {
@@ -213,6 +214,38 @@ func validatePassword(password string) error {
 	}
 	if !hasSpecialChar {
 		return ErrPasswordNoSpecialChar
+	}
+
+	return nil
+}
+
+func (u *userUsecase) ResetPassword(password, flowID string) error {
+	flow, err := u.passwordResetRepo.FindByFlowID(flowID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return ErrPasswordResetFlowNotFound
+		}
+		if errors.Is(err, repositories.ErrFind) {
+			return ErrFindingRecord
+		}
+	}
+	if flow.ExpiresAt.Before(time.Now()) {
+		return ErrPasswordResetFlowExpired
+	}
+
+	if err := validatePassword(password); err != nil {
+		return err
+	}
+
+	user := &flow.User
+	hashedPassword, err := hash.BCryptPasswordHasher().HashPassword(password)
+	if err != nil {
+		return ErrHashingPassword
+	}
+
+	user.PasswordHash = hashedPassword
+	if err := u.userRepo.Update(user); err != nil {
+		return ErrUpatingRecord
 	}
 
 	return nil

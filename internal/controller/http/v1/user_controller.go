@@ -10,6 +10,7 @@ import (
 type UserController interface {
 	SignUp(c *gin.Context)
 	SendPasswordRecoveryEmail(c *gin.Context)
+	ResetPassword(c *gin.Context)
 }
 
 type userController struct {
@@ -86,6 +87,10 @@ func (u *userController) SendPasswordRecoveryEmail(c *gin.Context) {
 
 	res := SendPasswordRecoveryEmailResponse{}
 	c.JSON(http.StatusOK, res)
+}
+
+func (u *userController) ResetPassword(c *gin.Context) {
+
 }
 
 func getBaseURL(c *gin.Context) string {

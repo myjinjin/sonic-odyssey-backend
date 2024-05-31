@@ -26,7 +26,7 @@ func (r *PasswordResetFlowRepository) Create(flow *entities.PasswordResetFlow) e
 
 func (r *PasswordResetFlowRepository) FindByFlowID(flowID string) (*entities.PasswordResetFlow, error) {
 	flow := new(entities.PasswordResetFlow)
-	err := r.db.Where("flow_id = ?", flowID).First(&flow).Error
+	err := r.db.Where("flow_id = ?", flowID).Preload("User").First(&flow).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound
