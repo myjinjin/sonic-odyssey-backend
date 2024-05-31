@@ -78,8 +78,8 @@ func (u *userController) SendPasswordRecoveryEmail(c *gin.Context) {
 		return
 	}
 
-	bashURL := getBaseURL(c)
-	if err := u.userUsecase.SendPasswordRecoveryEmail(bashURL, req.Email); err != nil {
+	baseURL := getBaseURL(c)
+	if err := u.userUsecase.SendPasswordRecoveryEmail(baseURL, req.Email); err != nil {
 		HandleError(c, err)
 		return
 	}
