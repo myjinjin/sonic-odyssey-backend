@@ -12,17 +12,17 @@ type UserUsecase struct {
 	mock.Mock
 }
 
-// SendPasswordRecoveryEmail provides a mock function with given fields: email
-func (_m *UserUsecase) SendPasswordRecoveryEmail(email string) error {
-	ret := _m.Called(email)
+// SendPasswordRecoveryEmail provides a mock function with given fields: baseURL, email
+func (_m *UserUsecase) SendPasswordRecoveryEmail(baseURL string, email string) error {
+	ret := _m.Called(baseURL, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SendPasswordRecoveryEmail")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string) error); ok {
-		r0 = rf(email)
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(baseURL, email)
 	} else {
 		r0 = ret.Error(0)
 	}

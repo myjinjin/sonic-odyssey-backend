@@ -6,6 +6,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
+	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -294,4 +295,89 @@ func TestUserUsecase_SignUp_UserCreationFailed(t *testing.T) {
 	userRepo.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
 	emailSender.AssertExpectations(t)
+}
+
+func TestUserUsecase_SendPasswordRecoveryEmail_Success(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	userEmail := "test@example.com"
+	baseURL := "http://localhost:8080"
+
+	// Expectations
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(userEmail)
+	user := &entities.User{ID: 1, Name: "Test User"}
+
+	userRepo.On("FindByEmailHash", hashedEmail).Return(user, nil)
+	passwordResetRepo.On("Create", mock.AnythingOfType("*entities.PasswordResetFlow")).Return(nil)
+	emailSender.On("SendEmail", userEmail, email.TemplatePasswordReset, mock.AnythingOfType("email.PasswordResetData")).Return(nil)
+
+	// Execute
+	err := userUsecase.SendPasswordRecoveryEmail(baseURL, userEmail)
+	assert.NoError(t, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	passwordResetRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_SendPasswordRecoveryEmail_UserNotFound(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	userEmail := "test@example.com"
+	baseURL := "http://localhost:8080"
+
+	// Expectations
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(userEmail)
+
+	userRepo.On("FindByEmailHash", hashedEmail).Return(nil, repositories.ErrNotFound)
+
+	// Execute
+	err := userUsecase.SendPasswordRecoveryEmail(baseURL, userEmail)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrUserNotFound)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	passwordResetRepo.AssertNotCalled(t, "Create")
+}
+
+func TestUserUsecase_SendPasswordRecoveryEmail_CreateResetFlowError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	userEmail := "test@example.com"
+	baseURL := "http://localhost:8080"
+
+	// Expectations
+	hashedEmail := hash.SHA256EmailHasher().HashEmail(userEmail)
+	user := &entities.User{ID: 1, Name: "Test User"}
+
+	userRepo.On("FindByEmailHash", hashedEmail).Return(user, nil)
+	passwordResetRepo.On("Create", mock.AnythingOfType("*entities.PasswordResetFlow")).Return(repositories.ErrCreate)
+
+	// Execute
+	err := userUsecase.SendPasswordRecoveryEmail(baseURL, userEmail)
+	assert.ErrorIs(t, err, ErrCreatingRecord)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	passwordResetRepo.AssertExpectations(t)
 }
