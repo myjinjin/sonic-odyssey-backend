@@ -156,3 +156,85 @@ func TestUserController_SendPasswordRecoveryEmail(t *testing.T) {
 		mockUserUsecase.AssertExpectations(t)
 	})
 }
+
+func TestUserController_ResetPassword(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("Success", func(t *testing.T) {
+		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
+		password := "newPassword123!"
+		flowID := "flow123"
+		mockUserUsecase.On("ResetPassword", password, flowID).Return(nil)
+
+		reqBody, _ := json.Marshal(ResetPasswordRequest{
+			Password: password,
+			FlowID:   flowID,
+		})
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/users/password/reset", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockUserUsecase.AssertExpectations(t)
+	})
+
+	t.Run("InvalidRequest", func(t *testing.T) {
+		reqBody, _ := json.Marshal(ResetPasswordRequest{
+			Password: "short",
+		})
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/users/password/reset", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockUserUsecase.AssertNotCalled(t, "ResetPassword")
+	})
+
+	t.Run("FlowNotFound", func(t *testing.T) {
+		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
+		password := "newPassword123!"
+		flowID := "flow123"
+		mockUserUsecase.On("ResetPassword", password, flowID).Return(usecase.ErrPasswordResetFlowNotFound)
+
+		reqBody, _ := json.Marshal(ResetPasswordRequest{
+			Password: password,
+			FlowID:   flowID,
+		})
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/users/password/reset", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockUserUsecase.AssertExpectations(t)
+	})
+
+	t.Run("FlowExpired", func(t *testing.T) {
+		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
+		password := "newPassword123!"
+		flowID := "flow123"
+		mockUserUsecase.On("ResetPassword", password, flowID).Return(usecase.ErrPasswordResetFlowExpired)
+
+		reqBody, _ := json.Marshal(ResetPasswordRequest{
+			Password: password,
+			FlowID:   flowID,
+		})
+
+		req, _ := http.NewRequest(http.MethodPost, "/api/v1/users/password/reset", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockUserUsecase.AssertExpectations(t)
+	})
+}
