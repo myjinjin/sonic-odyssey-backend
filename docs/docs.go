@@ -106,6 +106,52 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/users/password/recovery": {
+            "post": {
+                "description": "비밀번호 복구 이메일 전송",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Send password recovery email",
+                "parameters": [
+                    {
+                        "description": "SendPasswordRecoveryEmailRequest Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.SendPasswordRecoveryEmailRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SendPasswordRecoveryEmailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -151,6 +197,21 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "v1.SendPasswordRecoveryEmailRequest": {
+            "type": "object",
+            "required": [
+                "email"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
+        "v1.SendPasswordRecoveryEmailResponse": {
+            "type": "object"
         },
         "v1.SignUpRequest": {
             "type": "object",

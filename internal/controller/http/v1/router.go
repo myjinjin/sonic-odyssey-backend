@@ -45,6 +45,7 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 		userGroup := apiV1.Group("/users")
 		{
 			userGroup.POST("", userController.SignUp)
+			userGroup.POST("/password/recovery", userController.SendPasswordRecoveryEmail)
 		}
 
 		authGroup := apiV1.Group("/auth")

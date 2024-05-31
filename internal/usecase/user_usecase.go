@@ -150,7 +150,6 @@ func (u *userUsecase) SendPasswordRecoveryEmail(baseURL, userEmail string) error
 	resetLink := fmt.Sprintf("%s/password/recovery?flow_id=%s", baseURL, passwordResetFlow.FlowID)
 
 	go func() {
-		fmt.Println("??????")
 		passwordResetData := email.PasswordResetData{Name: user.Name, ResetLink: resetLink}
 		err := u.emailSender.SendEmail(userEmail, email.TemplatePasswordReset, passwordResetData)
 		if err != nil {

@@ -28,6 +28,16 @@ definitions:
       error:
         type: string
     type: object
+  v1.SendPasswordRecoveryEmailRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+    required:
+    - email
+    type: object
+  v1.SendPasswordRecoveryEmailResponse:
+    type: object
   v1.SignUpRequest:
     properties:
       email:
@@ -116,6 +126,36 @@ paths:
           schema:
             $ref: '#/definitions/v1.ErrorResponse'
       summary: User SignUp
+      tags:
+      - users
+  /api/v1/users/password/recovery:
+    post:
+      consumes:
+      - application/json
+      description: 비밀번호 복구 이메일 전송
+      parameters:
+      - description: SendPasswordRecoveryEmailRequest Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.SendPasswordRecoveryEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.SendPasswordRecoveryEmailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      summary: Send password recovery email
       tags:
       - users
 swagger: "2.0"

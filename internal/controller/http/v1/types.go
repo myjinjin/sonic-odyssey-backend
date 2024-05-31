@@ -20,3 +20,9 @@ type SignUpRequest struct {
 type SignUpResponse struct {
 	UserID uint `json:"user_id" example:"1"`
 }
+
+type SendPasswordRecoveryEmailRequest struct {
+	Email string `json:"email" binding:"required,email" example:"user@example.com"`
+}
+
+type SendPasswordRecoveryEmailResponse struct{}
