@@ -152,6 +152,52 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/users/password/reset": {
+            "post": {
+                "description": "비밀번호 재설정",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Reset password",
+                "parameters": [
+                    {
+                        "description": "ResetPasswordRequest Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ResetPasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -197,6 +243,27 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "v1.ResetPasswordRequest": {
+            "type": "object",
+            "required": [
+                "flow_id",
+                "password"
+            ],
+            "properties": {
+                "flow_id": {
+                    "type": "string",
+                    "example": "cc833698-4519-4873-b9b4-67d6fef70dcb:1717170088"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "password123"
+                }
+            }
+        },
+        "v1.ResetPasswordResponse": {
+            "type": "object"
         },
         "v1.SendPasswordRecoveryEmailRequest": {
             "type": "object",

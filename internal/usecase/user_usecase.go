@@ -248,6 +248,10 @@ func (u *userUsecase) ResetPassword(password, flowID string) error {
 		return ErrUpatingRecord
 	}
 
+	if err := u.passwordResetRepo.DeleteByFlowID(flowID); err != nil {
+		return ErrDeletingRecord
+	}
+
 	return nil
 }
 

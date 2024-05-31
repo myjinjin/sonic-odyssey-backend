@@ -89,8 +89,32 @@ func (u *userController) SendPasswordRecoveryEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// ResetPassword godoc
+// @Summary Reset password
+// @Description 비밀번호 재설정
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body ResetPasswordRequest true "ResetPasswordRequest Request"
+// @Success 201 {object} ResetPasswordResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/users/password/reset [post]
 func (u *userController) ResetPassword(c *gin.Context) {
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		HandleError(c, ErrInvalidRequestBody)
+		return
+	}
 
+	err := u.userUsecase.ResetPassword(req.Password, req.FlowID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	res := ResetPasswordResponse{}
+	c.JSON(http.StatusOK, res)
 }
 
 func getBaseURL(c *gin.Context) string {

@@ -409,6 +409,7 @@ func TestUserUsecase_ResetPassword_Success(t *testing.T) {
 		updatedUser := args.Get(0).(*entities.User)
 		user.PasswordHash = updatedUser.PasswordHash
 	})
+	passwordResetRepo.On("DeleteByFlowID", flowID).Return(nil)
 
 	// Execute
 	err := userUsecase.ResetPassword(password, flowID)
@@ -506,4 +507,42 @@ func TestUserUsecase_ResetPassword_InvalidPassword(t *testing.T) {
 
 	// Verify
 	passwordResetRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_ResetPassword_DeleteFlowError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	password := "newPassword123!"
+	flowID := "flow123"
+	user := &entities.User{ID: 1, Name: "Test User"}
+	flow := &entities.PasswordResetFlow{
+		ID:        1,
+		UserID:    user.ID,
+		User:      *user,
+		FlowID:    flowID,
+		ExpiresAt: func() *time.Time { t := time.Now().Add(time.Hour); return &t }(),
+	}
+
+	// Expectations
+	passwordResetRepo.On("FindByFlowID", flowID).Return(flow, nil)
+	userRepo.On("Update", mock.AnythingOfType("*entities.User")).Return(nil).Run(func(args mock.Arguments) {
+		updatedUser := args.Get(0).(*entities.User)
+		user.PasswordHash = updatedUser.PasswordHash
+	})
+	passwordResetRepo.On("DeleteByFlowID", flowID).Return(repositories.ErrDelete)
+
+	// Execute
+	err := userUsecase.ResetPassword(password, flowID)
+	assert.Error(t, err)
+	assert.Equal(t, ErrDeletingRecord, err)
+
+	// Verify
+	passwordResetRepo.AssertExpectations(t)
+	userRepo.AssertExpectations(t)
 }
