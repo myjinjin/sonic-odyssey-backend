@@ -152,7 +152,7 @@ func TestUserController_SendPasswordRecoveryEmail(t *testing.T) {
 		w := httptest.NewRecorder()
 		testRouter.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusNotFound, w.Code)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		mockUserUsecase.AssertExpectations(t)
 	})
 }

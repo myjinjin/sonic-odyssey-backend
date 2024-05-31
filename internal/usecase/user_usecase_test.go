@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"testing"
+	"time"
 
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/email"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
@@ -379,5 +380,130 @@ func TestUserUsecase_SendPasswordRecoveryEmail_CreateResetFlowError(t *testing.T
 
 	// Verify
 	userRepo.AssertExpectations(t)
+	passwordResetRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_ResetPassword_Success(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	password := "newPassword123!"
+	flowID := "flow123"
+	user := &entities.User{ID: 1, Name: "Test User"}
+	flow := &entities.PasswordResetFlow{
+		ID:        1,
+		UserID:    user.ID,
+		User:      *user,
+		FlowID:    flowID,
+		ExpiresAt: func() *time.Time { t := time.Now().Add(time.Hour); return &t }(),
+	}
+
+	// Expectations
+	passwordResetRepo.On("FindByFlowID", flowID).Return(flow, nil)
+	userRepo.On("Update", mock.AnythingOfType("*entities.User")).Return(nil).Run(func(args mock.Arguments) {
+		updatedUser := args.Get(0).(*entities.User)
+		user.PasswordHash = updatedUser.PasswordHash
+	})
+
+	// Execute
+	err := userUsecase.ResetPassword(password, flowID)
+	assert.NoError(t, err)
+
+	// Verify
+	passwordResetRepo.AssertExpectations(t)
+	userRepo.AssertExpectations(t)
+	assert.True(t, hash.BCryptPasswordHasher().CheckPasswordHash(password, user.PasswordHash))
+}
+
+func TestUserUsecase_ResetPassword_FlowNotFound(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	password := "newPassword123!"
+	flowID := "flow123"
+
+	// Expectations
+	passwordResetRepo.On("FindByFlowID", flowID).Return(nil, repositories.ErrNotFound)
+
+	// Execute
+	err := userUsecase.ResetPassword(password, flowID)
+	assert.Error(t, err)
+	assert.Equal(t, ErrPasswordResetFlowNotFound, err)
+
+	// Verify
+	passwordResetRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_ResetPassword_FlowExpired(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	password := "newPassword123!"
+	flowID := "flow123"
+	user := &entities.User{ID: 1, Name: "Test User"}
+	flow := &entities.PasswordResetFlow{
+		ID:        1,
+		UserID:    user.ID,
+		User:      *user,
+		FlowID:    flowID,
+		ExpiresAt: func() *time.Time { t := time.Now().Add(-time.Hour); return &t }(),
+	}
+
+	// Expectations
+	passwordResetRepo.On("FindByFlowID", flowID).Return(flow, nil)
+
+	// Execute
+	err := userUsecase.ResetPassword(password, flowID)
+	assert.Error(t, err)
+	assert.Equal(t, ErrPasswordResetFlowExpired, err)
+
+	// Verify
+	passwordResetRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_ResetPassword_InvalidPassword(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	passwordResetRepo := &mocks.PasswordResetFlowRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+	emailSender := &mocks.EmailSender{}
+
+	userUsecase := NewUserUsecase(userRepo, passwordResetRepo, emailEncryptor, emailSender)
+
+	password := "short"
+	flowID := "flow123"
+	user := &entities.User{ID: 1, Name: "Test User"}
+	flow := &entities.PasswordResetFlow{
+		ID:        1,
+		UserID:    user.ID,
+		User:      *user,
+		FlowID:    flowID,
+		ExpiresAt: func() *time.Time { t := time.Now().Add(time.Hour); return &t }(),
+	}
+
+	// Expectations
+	passwordResetRepo.On("FindByFlowID", flowID).Return(flow, nil)
+
+	// Execute
+	err := userUsecase.ResetPassword(password, flowID)
+	assert.Error(t, err)
+	assert.Equal(t, ErrPasswordTooShort, err)
+
+	// Verify
 	passwordResetRepo.AssertExpectations(t)
 }

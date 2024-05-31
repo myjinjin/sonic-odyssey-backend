@@ -12,6 +12,24 @@ type UserUsecase struct {
 	mock.Mock
 }
 
+// ResetPassword provides a mock function with given fields: password, flowID
+func (_m *UserUsecase) ResetPassword(password string, flowID string) error {
+	ret := _m.Called(password, flowID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetPassword")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(password, flowID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SendPasswordRecoveryEmail provides a mock function with given fields: baseURL, email
 func (_m *UserUsecase) SendPasswordRecoveryEmail(baseURL string, email string) error {
 	ret := _m.Called(baseURL, email)
