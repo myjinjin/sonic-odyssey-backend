@@ -33,3 +33,13 @@ type ResetPasswordRequest struct {
 }
 
 type ResetPasswordResponse struct{}
+
+type GetMyUserInfoResponse struct {
+	UserID          uint   `json:"user_id" example:"1"`
+	Email           string `json:"email" example:"user@example.com"`
+	Name            string `json:"name" example:"name"`
+	Nickname        string `json:"nickname" example:"nickname"`
+	ProfileImageURL string `json:"profile_image_url" example:"https://example.com/profile.png"`
+	Bio             string `json:"bio" example:"bio..."`
+	Website         string `json:"website" example:"https://example.com"`
+}

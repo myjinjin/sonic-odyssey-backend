@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const identityKey = "user_nickname"
+const identityKey = "identity"
 
 type JWTMiddleware struct {
 	*jwt.GinJWTMiddleware

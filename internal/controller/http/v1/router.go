@@ -38,7 +38,7 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 		logging.Log().Info("Request", fields...)
 	})
 
-	userController := NewUserController(userUsecase)
+	userController := NewUserController(userUsecase, jwtAuth)
 
 	apiV1 := r.Group("/api/v1")
 	{
@@ -47,6 +47,7 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 			userGroup.POST("", userController.SignUp)
 			userGroup.POST("/password/recovery", userController.SendPasswordRecoveryEmail)
 			userGroup.POST("/password/reset", userController.ResetPassword)
+			userGroup.GET("/me", jwtAuth.MiddlewareFunc(), userController.GetMyUserInfo)
 		}
 
 		authGroup := apiV1.Group("/auth")

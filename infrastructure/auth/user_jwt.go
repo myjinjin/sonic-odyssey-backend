@@ -68,7 +68,7 @@ func (u *userJWT) Authenticator(c *gin.Context) (interface{}, error) {
 func (u *userJWT) PayloadFunc(data interface{}) jwt.MapClaims {
 	if user, ok := data.(*entities.User); ok {
 		return jwt.MapClaims{
-			identityKey: user.Nickname,
+			identityKey: user.ID,
 		}
 	}
 	return jwt.MapClaims{}
@@ -76,9 +76,8 @@ func (u *userJWT) PayloadFunc(data interface{}) jwt.MapClaims {
 
 func (u *userJWT) IdentityHandler(c *gin.Context) interface{} {
 	claims := jwt.ExtractClaims(c)
-	return &entities.User{
-		Nickname: claims[identityKey].(string),
-	}
+	userID := claims[identityKey].(float64)
+	return uint(userID)
 }
 
 func (u *userJWT) Authorizator(data interface{}, c *gin.Context) bool {

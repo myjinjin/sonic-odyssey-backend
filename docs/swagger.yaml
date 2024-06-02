@@ -28,6 +28,30 @@ definitions:
       error:
         type: string
     type: object
+  v1.GetMyUserInfoResponse:
+    properties:
+      bio:
+        example: bio...
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: name
+        type: string
+      nickname:
+        example: nickname
+        type: string
+      profile_image_url:
+        example: https://example.com/profile.png
+        type: string
+      user_id:
+        example: 1
+        type: integer
+      website:
+        example: https://example.com
+        type: string
+    type: object
   v1.ResetPasswordRequest:
     properties:
       flow_id:
@@ -141,6 +165,31 @@ paths:
           schema:
             $ref: '#/definitions/v1.ErrorResponse'
       summary: User SignUp
+      tags:
+      - users
+  /api/v1/users/me:
+    get:
+      consumes:
+      - application/json
+      description: JWT 인증 토큰 기반 내 유저 정보 조회
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.GetMyUserInfoResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my user info
       tags:
       - users
   /api/v1/users/password/recovery:

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/auth"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
 )
 
@@ -11,15 +12,18 @@ type UserController interface {
 	SignUp(c *gin.Context)
 	SendPasswordRecoveryEmail(c *gin.Context)
 	ResetPassword(c *gin.Context)
+	GetMyUserInfo(c *gin.Context)
 }
 
 type userController struct {
 	userUsecase usecase.UserUsecase
+	jwtAuth     *auth.JWTMiddleware
 }
 
-func NewUserController(userUsecase usecase.UserUsecase) UserController {
+func NewUserController(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) UserController {
 	return &userController{
 		userUsecase: userUsecase,
+		jwtAuth:     jwtAuth,
 	}
 }
 
@@ -114,6 +118,37 @@ func (u *userController) ResetPassword(c *gin.Context) {
 	}
 
 	res := ResetPasswordResponse{}
+	c.JSON(http.StatusOK, res)
+}
+
+// GetMyUserInfo godoc
+// @Summary      Get my user info
+// @Description  JWT 인증 토큰 기반 내 유저 정보 조회
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  GetMyUserInfoResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/users/me [get]
+func (u *userController) GetMyUserInfo(c *gin.Context) {
+	userID := c.GetUint(u.jwtAuth.IdentityKey)
+	user, err := u.userUsecase.GetUserByID(userID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	res := GetMyUserInfoResponse{
+		UserID:          user.ID,
+		Email:           user.Email,
+		Name:            user.Name,
+		Nickname:        user.Nickname,
+		ProfileImageURL: user.ProfileImageURL,
+		Bio:             user.Bio,
+		Website:         user.Website,
+	}
 	c.JSON(http.StatusOK, res)
 }
 

@@ -107,6 +107,46 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "JWT 인증 토큰 기반 내 유저 정보 조회",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get my user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.GetMyUserInfoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/password/recovery": {
             "post": {
                 "description": "비밀번호 복구 이메일 전송",
@@ -241,6 +281,39 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "v1.GetMyUserInfoResponse": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "example": "bio..."
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "name"
+                },
+                "nickname": {
+                    "type": "string",
+                    "example": "nickname"
+                },
+                "profile_image_url": {
+                    "type": "string",
+                    "example": "https://example.com/profile.png"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "website": {
+                    "type": "string",
+                    "example": "https://example.com"
                 }
             }
         },
