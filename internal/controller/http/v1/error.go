@@ -28,6 +28,7 @@ var errorStatusMap = map[error]int{
 
 	usecase.ErrHashingPassword: http.StatusInternalServerError,
 	usecase.ErrEncryptingEmail: http.StatusInternalServerError,
+	usecase.ErrDecryptingEmail: http.StatusInternalServerError,
 
 	usecase.ErrSendingEmail: http.StatusInternalServerError,
 

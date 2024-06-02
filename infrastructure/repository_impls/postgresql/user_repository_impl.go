@@ -26,7 +26,7 @@ func (r *UserRepository) Create(user *entities.User) error {
 
 func (r *UserRepository) FindByID(id uint) (*entities.User, error) {
 	user := new(entities.User)
-	err := r.db.First(&user, id).Error
+	err := r.db.Preload("UserProfile").First(&user, id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, repositories.ErrNotFound

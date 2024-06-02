@@ -22,6 +22,7 @@ var (
 
 	ErrHashingPassword = errors.New("failed to hash password")
 	ErrEncryptingEmail = errors.New("failed to encrypt email")
+	ErrDecryptingEmail = errors.New("failed to decrypt email")
 
 	ErrSendingEmail = errors.New("failed to send email")
 

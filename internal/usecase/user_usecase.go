@@ -27,10 +27,21 @@ type SignUpOutput struct {
 	UserID uint
 }
 
+type GetUserByIDOutput struct {
+	ID              uint
+	Email           string
+	Name            string
+	Nickname        string
+	ProfileImageURL string
+	Bio             string
+	Website         string
+}
+
 type UserUsecase interface {
 	SignUp(SignUpInput) (*SignUpOutput, error)
 	SendPasswordRecoveryEmail(baseURL, email string) error
 	ResetPassword(password, flowID string) error
+	GetUserByID(userID uint) (*GetUserByIDOutput, error)
 }
 
 type userUsecase struct {
@@ -253,6 +264,35 @@ func (u *userUsecase) ResetPassword(password, flowID string) error {
 	}
 
 	return nil
+}
+
+func (u *userUsecase) GetUserByID(userID uint) (*GetUserByIDOutput, error) {
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return nil, ErrUserNotFound
+		}
+		if errors.Is(err, repositories.ErrFind) {
+			return nil, ErrFindingRecord
+		}
+	}
+
+	decryptedEmail, err := u.emailEncryptor.Decrypt(user.Email)
+	if err != nil {
+		return nil, ErrDecryptingEmail
+	}
+
+	output := &GetUserByIDOutput{
+		ID:              user.ID,
+		Email:           decryptedEmail,
+		Name:            user.Name,
+		Nickname:        user.Nickname,
+		ProfileImageURL: user.UserProfile.ProfileImageURL,
+		Bio:             user.UserProfile.Bio,
+		Website:         user.UserProfile.Website,
+	}
+
+	return output, nil
 }
 
 func generateFlowID() string {
