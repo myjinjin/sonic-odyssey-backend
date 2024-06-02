@@ -12,6 +12,36 @@ type UserUsecase struct {
 	mock.Mock
 }
 
+// GetUserByID provides a mock function with given fields: userID
+func (_m *UserUsecase) GetUserByID(userID uint) (*usecase.GetUserByIDOutput, error) {
+	ret := _m.Called(userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserByID")
+	}
+
+	var r0 *usecase.GetUserByIDOutput
+	var r1 error
+	if rf, ok := ret.Get(0).(func(uint) (*usecase.GetUserByIDOutput, error)); ok {
+		return rf(userID)
+	}
+	if rf, ok := ret.Get(0).(func(uint) *usecase.GetUserByIDOutput); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*usecase.GetUserByIDOutput)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(uint) error); ok {
+		r1 = rf(userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ResetPassword provides a mock function with given fields: password, flowID
 func (_m *UserUsecase) ResetPassword(password string, flowID string) error {
 	ret := _m.Called(password, flowID)

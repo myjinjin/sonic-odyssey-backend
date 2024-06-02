@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -545,4 +546,132 @@ func TestUserUsecase_ResetPassword_DeleteFlowError(t *testing.T) {
 	// Verify
 	passwordResetRepo.AssertExpectations(t)
 	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserByID_Success(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+
+	userUsecase := NewUserUsecase(userRepo, nil, emailEncryptor, nil)
+
+	userID := uint(1)
+	encryptedEmail := "encrypted_email"
+	decryptedEmail := "test@example.com"
+
+	user := &entities.User{
+		ID:       userID,
+		Email:    encryptedEmail,
+		Name:     "Test User",
+		Nickname: "testuser",
+		UserProfile: &entities.UserProfile{
+			ProfileImageURL: "https://example.com/profile.png",
+			Bio:             "Test bio",
+			Website:         "https://example.com",
+		},
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(user, nil)
+	emailEncryptor.On("Decrypt", encryptedEmail).Return(decryptedEmail, nil)
+
+	// Execute
+	output, err := userUsecase.GetUserByID(userID)
+
+	// Assert
+	assert.NoError(t, err)
+	assert.NotNil(t, output)
+	assert.Equal(t, userID, output.ID)
+	assert.Equal(t, decryptedEmail, output.Email)
+	assert.Equal(t, user.Name, output.Name)
+	assert.Equal(t, user.Nickname, output.Nickname)
+	assert.Equal(t, user.UserProfile.ProfileImageURL, output.ProfileImageURL)
+	assert.Equal(t, user.UserProfile.Bio, output.Bio)
+	assert.Equal(t, user.UserProfile.Website, output.Website)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	emailEncryptor.AssertExpectations(t)
+}
+
+func TestUserUsecase_GetUserByID_UserNotFound(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+
+	userUsecase := NewUserUsecase(userRepo, nil, emailEncryptor, nil)
+
+	userID := uint(1)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrNotFound)
+
+	// Execute
+	output, err := userUsecase.GetUserByID(userID)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrUserNotFound, err)
+	assert.Nil(t, output)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	emailEncryptor.AssertNotCalled(t, "Decrypt")
+}
+
+func TestUserUsecase_GetUserByID_FindError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+
+	userUsecase := NewUserUsecase(userRepo, nil, emailEncryptor, nil)
+
+	userID := uint(1)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrFind)
+
+	// Execute
+	output, err := userUsecase.GetUserByID(userID)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrFindingRecord, err)
+	assert.Nil(t, output)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	emailEncryptor.AssertNotCalled(t, "Decrypt")
+}
+
+func TestUserUsecase_GetUserByID_DecryptionError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	emailEncryptor := &mocks.Encryptor{}
+
+	userUsecase := NewUserUsecase(userRepo, nil, emailEncryptor, nil)
+
+	userID := uint(1)
+	encryptedEmail := "encrypted_email"
+
+	user := &entities.User{
+		ID:    userID,
+		Email: encryptedEmail,
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(user, nil)
+	emailEncryptor.On("Decrypt", encryptedEmail).Return("", errors.New("decryption error"))
+
+	// Execute
+	output, err := userUsecase.GetUserByID(userID)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrDecryptingEmail, err)
+	assert.Nil(t, output)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	emailEncryptor.AssertExpectations(t)
 }
