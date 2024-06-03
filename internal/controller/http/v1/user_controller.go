@@ -133,7 +133,8 @@ func (u *userController) ResetPassword(c *gin.Context) {
 // @Failure      500  {object}  ErrorResponse
 // @Router       /api/v1/users/me [get]
 func (u *userController) GetMyUserInfo(c *gin.Context) {
-	userID := c.GetUint(u.jwtAuth.IdentityKey)
+	payload := auth.GetUserPayload(c, u.jwtAuth.GinJWTMiddleware)
+	userID := payload.UserID
 	user, err := u.userUsecase.GetUserByID(userID)
 	if err != nil {
 		HandleError(c, err)

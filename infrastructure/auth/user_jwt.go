@@ -6,7 +6,6 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/hash"
-	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 )
 
@@ -33,7 +32,7 @@ type LoginRequest struct {
 }
 
 type UserPayload struct {
-	Nickname string `json:"nickname"`
+	UserID uint `json:"user_id"`
 }
 type LoginResponse struct {
 	ExpiresAt time.Time `json:"expires_at" example:"2024-05-30T09:00:00Z"`
@@ -62,13 +61,14 @@ func (u *userJWT) Authenticator(c *gin.Context) (interface{}, error) {
 		return "", jwt.ErrFailedAuthentication
 	}
 
-	return user, nil
+	userPayload := &UserPayload{UserID: user.ID}
+	return userPayload, nil
 }
 
 func (u *userJWT) PayloadFunc(data interface{}) jwt.MapClaims {
-	if user, ok := data.(*entities.User); ok {
+	if payload, ok := data.(*UserPayload); ok {
 		return jwt.MapClaims{
-			identityKey: user.ID,
+			identityKey: &payload,
 		}
 	}
 	return jwt.MapClaims{}
@@ -76,8 +76,10 @@ func (u *userJWT) PayloadFunc(data interface{}) jwt.MapClaims {
 
 func (u *userJWT) IdentityHandler(c *gin.Context) interface{} {
 	claims := jwt.ExtractClaims(c)
-	userID := claims[identityKey].(float64)
-	return uint(userID)
+	if payload, ok := claims[identityKey]; ok {
+		return payload.(map[string]interface{})
+	}
+	return nil
 }
 
 func (u *userJWT) Authorizator(data interface{}, c *gin.Context) bool {
