@@ -34,7 +34,7 @@ var errorStatusMap = map[error]int{
 
 	usecase.ErrCreatingRecord: http.StatusInternalServerError,
 	usecase.ErrFindingRecord:  http.StatusInternalServerError,
-	usecase.ErrUpatingRecord:  http.StatusInternalServerError,
+	usecase.ErrUpdatingRecord: http.StatusInternalServerError,
 	usecase.ErrDeletingRecord: http.StatusInternalServerError,
 
 	ErrInvalidRequestBody: http.StatusBadRequest,

@@ -28,6 +28,6 @@ var (
 
 	ErrCreatingRecord = repositories.ErrCreate
 	ErrFindingRecord  = repositories.ErrFind
-	ErrUpatingRecord  = repositories.ErrUpdate
+	ErrUpdatingRecord = repositories.ErrUpdate
 	ErrDeletingRecord = repositories.ErrDelete
 )

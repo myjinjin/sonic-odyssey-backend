@@ -16,32 +16,12 @@ import (
 	"go.uber.org/zap"
 )
 
-type SignUpInput struct {
-	Email    string
-	Password string
-	Name     string
-	Nickname string
-}
-
-type SignUpOutput struct {
-	UserID uint
-}
-
-type GetUserByIDOutput struct {
-	ID              uint
-	Email           string
-	Name            string
-	Nickname        string
-	ProfileImageURL string
-	Bio             string
-	Website         string
-}
-
 type UserUsecase interface {
 	SignUp(SignUpInput) (*SignUpOutput, error)
 	SendPasswordRecoveryEmail(baseURL, email string) error
 	ResetPassword(password, flowID string) error
 	GetUserByID(userID uint) (*GetUserByIDOutput, error)
+	PatchUser(userID uint, input *PatchUserInput) error
 }
 
 type userUsecase struct {
@@ -256,7 +236,7 @@ func (u *userUsecase) ResetPassword(password, flowID string) error {
 
 	user.PasswordHash = hashedPassword
 	if err := u.userRepo.Update(user); err != nil {
-		return ErrUpatingRecord
+		return ErrUpdatingRecord
 	}
 
 	if err := u.passwordResetRepo.DeleteByFlowID(flowID); err != nil {
@@ -293,6 +273,37 @@ func (u *userUsecase) GetUserByID(userID uint) (*GetUserByIDOutput, error) {
 	}
 
 	return output, nil
+}
+
+func (u *userUsecase) PatchUser(userID uint, input *PatchUserInput) error {
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return ErrUserNotFound
+		}
+		if errors.Is(err, repositories.ErrFind) {
+			return ErrFindingRecord
+		}
+	}
+
+	if input.Name != nil {
+		user.Name = *input.Name
+	}
+	if input.Nickname != nil {
+		user.Nickname = *input.Nickname
+	}
+	if input.Bio != nil {
+		user.UserProfile.Bio = *input.Bio
+	}
+	if input.Website != nil {
+		user.UserProfile.Website = *input.Website
+	}
+
+	if err := u.userRepo.Update(user); err != nil {
+		return ErrUpdatingRecord
+	}
+
+	return nil
 }
 
 func generateFlowID() string {
