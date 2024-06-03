@@ -10,6 +10,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/entities"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/domain/repositories"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
+	"github.com/myjinjin/sonic-odyssey-backend/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -674,4 +675,123 @@ func TestUserUsecase_GetUserByID_DecryptionError(t *testing.T) {
 	// Verify
 	userRepo.AssertExpectations(t)
 	emailEncryptor.AssertExpectations(t)
+}
+
+func TestUserUsecase_PatchUser_Success(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := &userUsecase{userRepo: userRepo}
+
+	userID := uint(1)
+	input := &PatchUserInput{
+		Name:     utils.ToPtr("Updated Name"),
+		Nickname: utils.ToPtr("updatednickname"),
+		Bio:      utils.ToPtr("Updated Bio"),
+		Website:  utils.ToPtr("https://example.com"),
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID:       userID,
+		Name:     "Test User",
+		Nickname: "testuser",
+		UserProfile: &entities.UserProfile{
+			Bio:     "Test Bio",
+			Website: "https://test.com",
+		},
+	}, nil)
+
+	userRepo.On("Update", mock.MatchedBy(func(user *entities.User) bool {
+		return user.ID == userID &&
+			user.Name == *input.Name &&
+			user.Nickname == *input.Nickname &&
+			user.UserProfile.Bio == *input.Bio &&
+			user.UserProfile.Website == *input.Website
+	})).Return(nil)
+
+	// Execute
+	err := userUsecase.PatchUser(userID, input)
+
+	// Assert
+	assert.NoError(t, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_PatchUser_UserNotFound(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := &userUsecase{userRepo: userRepo}
+
+	userID := uint(1)
+	input := &PatchUserInput{
+		Name: utils.ToPtr("Updated Name"),
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrNotFound)
+
+	// Execute
+	err := userUsecase.PatchUser(userID, input)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrUserNotFound, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_PatchUser_FindingRecordError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := &userUsecase{userRepo: userRepo}
+
+	userID := uint(1)
+	input := &PatchUserInput{
+		Name: utils.ToPtr("Updated Name"),
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrFind)
+
+	// Execute
+	err := userUsecase.PatchUser(userID, input)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrFindingRecord, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_PatchUser_UpdatingRecordError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := &userUsecase{userRepo: userRepo}
+
+	userID := uint(1)
+	input := &PatchUserInput{
+		Name: utils.ToPtr("Updated Name"),
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID:   userID,
+		Name: "Test User",
+	}, nil)
+
+	userRepo.On("Update", mock.Anything).Return(repositories.ErrUpdate)
+
+	// Execute
+	err := userUsecase.PatchUser(userID, input)
+
+	// Assert
+	assert.Error(t, err)
+	assert.Equal(t, ErrUpdatingRecord, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
 }
