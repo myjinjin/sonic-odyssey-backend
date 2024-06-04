@@ -43,3 +43,12 @@ type GetMyUserInfoResponse struct {
 	Bio             string `json:"bio" example:"bio..."`
 	Website         string `json:"website" example:"https://example.com"`
 }
+
+type PatchMyUserRequest struct {
+	Name     *string `json:"name" example:"newname" validate:"omitempty,min=2"`
+	Nickname *string `json:"nickname" example:"newnickname" validate:"omitempty,min=5"`
+	Bio      *string `json:"bio" example:"newbio" validate:"omitempty"`
+	Website  *string `json:"website" example:"https://example.com/new" validate:"omitempty,url"`
+}
+
+type PatchMyUserResponse struct{}

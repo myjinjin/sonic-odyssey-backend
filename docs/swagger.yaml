@@ -52,6 +52,25 @@ definitions:
         example: https://example.com
         type: string
     type: object
+  v1.PatchMyUserRequest:
+    properties:
+      bio:
+        example: newbio
+        type: string
+      name:
+        example: newname
+        minLength: 2
+        type: string
+      nickname:
+        example: newnickname
+        minLength: 5
+        type: string
+      website:
+        example: https://example.com/new
+        type: string
+    type: object
+  v1.PatchMyUserResponse:
+    type: object
   v1.ResetPasswordRequest:
     properties:
       flow_id:
@@ -190,6 +209,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Get my user info
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: JWT 인증 토큰 기반 내 유저 정보 업데이트
+      parameters:
+      - description: PatchMyUser Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1.PatchMyUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.PatchMyUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Patch my user info
       tags:
       - users
   /api/v1/users/password/recovery:

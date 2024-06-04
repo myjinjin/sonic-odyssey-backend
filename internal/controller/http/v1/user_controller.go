@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/auth"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
+	"github.com/myjinjin/sonic-odyssey-backend/pkg/utils"
 )
 
 type UserController interface {
@@ -13,6 +14,7 @@ type UserController interface {
 	SendPasswordRecoveryEmail(c *gin.Context)
 	ResetPassword(c *gin.Context)
 	GetMyUserInfo(c *gin.Context)
+	PatchMyUser(c *gin.Context)
 }
 
 type userController struct {
@@ -150,6 +152,54 @@ func (u *userController) GetMyUserInfo(c *gin.Context) {
 		Bio:             user.Bio,
 		Website:         user.Website,
 	}
+	c.JSON(http.StatusOK, res)
+}
+
+// PatchMyUser godoc
+// @Summary      Patch my user info
+// @Description  JWT 인증 토큰 기반 내 유저 정보 업데이트
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param request body PatchMyUserRequest true "PatchMyUser Request"
+// @Success      200  {object}  PatchMyUserResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/users/me [patch]
+func (u *userController) PatchMyUser(c *gin.Context) {
+	payload := auth.GetUserPayload(c, u.jwtAuth.GinJWTMiddleware)
+	userID := payload.UserID
+	_, err := u.userUsecase.GetUserByID(userID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	var req PatchMyUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		HandleError(c, ErrInvalidRequestBody)
+		return
+	}
+
+	err = utils.ValidateRequest(&req)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	err = u.userUsecase.PatchUser(userID, &usecase.PatchUserInput{
+		Name:     req.Name,
+		Nickname: req.Nickname,
+		Bio:      req.Bio,
+		Website:  req.Website,
+	})
+	if err != nil {
+		HandleError(c, usecase.ErrUpdatingRecord)
+		return
+	}
+
+	res := PatchMyUserResponse{}
 	c.JSON(http.StatusOK, res)
 }
 

@@ -145,6 +145,55 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "JWT 인증 토큰 기반 내 유저 정보 업데이트",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Patch my user info",
+                "parameters": [
+                    {
+                        "description": "PatchMyUser Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.PatchMyUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.PatchMyUserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/users/password/recovery": {
@@ -316,6 +365,32 @@ const docTemplate = `{
                     "example": "https://example.com"
                 }
             }
+        },
+        "v1.PatchMyUserRequest": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "example": "newbio"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "example": "newname"
+                },
+                "nickname": {
+                    "type": "string",
+                    "minLength": 5,
+                    "example": "newnickname"
+                },
+                "website": {
+                    "type": "string",
+                    "example": "https://example.com/new"
+                }
+            }
+        },
+        "v1.PatchMyUserResponse": {
+            "type": "object"
         },
         "v1.ResetPasswordRequest": {
             "type": "object",

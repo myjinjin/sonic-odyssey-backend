@@ -700,7 +700,9 @@ func TestUserUsecase_PatchUser_Success(t *testing.T) {
 			Website: "https://test.com",
 		},
 	}, nil)
-
+	userRepo.On("FindByNickname", *input.Nickname).Return(&entities.User{
+		ID: userID,
+	}, nil)
 	userRepo.On("Update", mock.MatchedBy(func(user *entities.User) bool {
 		return user.ID == userID &&
 			user.Name == *input.Name &&

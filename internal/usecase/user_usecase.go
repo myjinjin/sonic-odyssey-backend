@@ -286,11 +286,18 @@ func (u *userUsecase) PatchUser(userID uint, input *PatchUserInput) error {
 		}
 	}
 
+	if input.Nickname != nil {
+		existUser, err := u.userRepo.FindByNickname(*input.Nickname)
+		if errors.Is(err, repositories.ErrFind) {
+			return ErrFindingRecord
+		}
+		if existUser.ID != userID {
+			return ErrNicknameAlreadyExists
+		}
+		user.Nickname = *input.Nickname
+	}
 	if input.Name != nil {
 		user.Name = *input.Name
-	}
-	if input.Nickname != nil {
-		user.Nickname = *input.Nickname
 	}
 	if input.Bio != nil {
 		user.UserProfile.Bio = *input.Bio

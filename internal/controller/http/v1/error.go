@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
+	"github.com/myjinjin/sonic-odyssey-backend/pkg/utils"
 )
 
 var (
@@ -41,6 +42,11 @@ var errorStatusMap = map[error]int{
 }
 
 func HandleError(c *gin.Context, err error) {
+	if validationErrors, ok := err.(utils.ValidationErrors); ok {
+		c.JSON(http.StatusBadRequest, NewErrorResponse(validationErrors))
+		return
+	}
+
 	if status, ok := errorStatusMap[err]; ok {
 		c.JSON(status, NewErrorResponse(err))
 		return

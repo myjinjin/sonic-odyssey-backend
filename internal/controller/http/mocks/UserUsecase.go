@@ -42,6 +42,24 @@ func (_m *UserUsecase) GetUserByID(userID uint) (*usecase.GetUserByIDOutput, err
 	return r0, r1
 }
 
+// PatchUser provides a mock function with given fields: userID, input
+func (_m *UserUsecase) PatchUser(userID uint, input *usecase.PatchUserInput) error {
+	ret := _m.Called(userID, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PatchUser")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(uint, *usecase.PatchUserInput) error); ok {
+		r0 = rf(userID, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ResetPassword provides a mock function with given fields: password, flowID
 func (_m *UserUsecase) ResetPassword(password string, flowID string) error {
 	ret := _m.Called(password, flowID)
