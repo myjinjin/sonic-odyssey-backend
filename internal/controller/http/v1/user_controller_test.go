@@ -306,3 +306,96 @@ func TestUserController_GetMyUserInfo(t *testing.T) {
 		mockUserUsecase.AssertExpectations(t)
 	})
 }
+
+func TestUserController_UpdatePassword(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("Success", func(t *testing.T) {
+		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
+		currPassword := "currPassword123!"
+		newPassword := "newPassword123!"
+		userID := uint(1)
+		mockUserUsecase.On("UpdatePassword", usecase.UpdatePasswordInput{
+			UserID:       userID,
+			CurrPassword: currPassword,
+			NewPassword:  newPassword,
+		}).Return(nil)
+
+		reqBody, _ := json.Marshal(UpdatePasswordRequest{
+			CurrPassword: currPassword,
+			NewPassword:  newPassword,
+		})
+
+		req, _ := http.NewRequest(http.MethodPut, "/api/v1/users/me/password", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		token, _, _ := testUserJwtAuth.TokenGenerator(&auth.UserPayload{UserID: userID})
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockUserUsecase.AssertExpectations(t)
+	})
+
+	t.Run("InvalidRequest", func(t *testing.T) {
+		reqBody, _ := json.Marshal(UpdatePasswordRequest{
+			CurrPassword: "currentPassword123!",
+			NewPassword:  "newPassword456!",
+		})
+
+		req, _ := http.NewRequest(http.MethodPut, "/api/v1/users/me/password", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockUserUsecase.AssertNotCalled(t, "UpdatePassword")
+	})
+
+	t.Run("Unauthorized", func(t *testing.T) {
+		reqBody, _ := json.Marshal(UpdatePasswordRequest{
+			CurrPassword: "invalid",
+		})
+
+		req, _ := http.NewRequest(http.MethodPut, "/api/v1/users/me/password", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		token, _, _ := testUserJwtAuth.TokenGenerator(&auth.UserPayload{UserID: 1})
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockUserUsecase.AssertNotCalled(t, "UpdatePassword")
+	})
+
+	t.Run("InvalidCurrentPassword", func(t *testing.T) {
+		defer func() { mockUserUsecase.Mock.ExpectedCalls = nil }()
+		currPassword := "wrongwrong123!"
+		newPassword := "newPassword456!"
+		userID := uint(1)
+		mockUserUsecase.On("UpdatePassword", usecase.UpdatePasswordInput{
+			UserID:       userID,
+			CurrPassword: currPassword,
+			NewPassword:  newPassword,
+		}).Return(usecase.ErrPasswordNoUppercase)
+
+		reqBody, _ := json.Marshal(UpdatePasswordRequest{
+			CurrPassword: currPassword,
+			NewPassword:  newPassword,
+		})
+
+		req, _ := http.NewRequest(http.MethodPut, "/api/v1/users/me/password", bytes.NewBuffer(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		token, _, _ := testUserJwtAuth.TokenGenerator(&auth.UserPayload{UserID: 1})
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		w := httptest.NewRecorder()
+		testRouter.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockUserUsecase.AssertExpectations(t)
+	})
+}
