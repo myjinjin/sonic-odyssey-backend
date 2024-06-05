@@ -27,3 +27,9 @@ type PatchUserInput struct {
 	Bio      *string
 	Website  *string
 }
+
+type UpdatePasswordInput struct {
+	UserID       uint
+	CurrPassword string
+	NewPassword  string
+}

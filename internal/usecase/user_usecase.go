@@ -20,6 +20,7 @@ type UserUsecase interface {
 	SignUp(SignUpInput) (*SignUpOutput, error)
 	SendPasswordRecoveryEmail(baseURL, email string) error
 	ResetPassword(password, flowID string) error
+	UpdatePassword(UpdatePasswordInput) error
 	GetUserByID(userID uint) (*GetUserByIDOutput, error)
 	PatchUser(userID uint, input *PatchUserInput) error
 }
@@ -241,6 +242,39 @@ func (u *userUsecase) ResetPassword(password, flowID string) error {
 
 	if err := u.passwordResetRepo.DeleteByFlowID(flowID); err != nil {
 		return ErrDeletingRecord
+	}
+
+	return nil
+}
+
+func (u *userUsecase) UpdatePassword(input UpdatePasswordInput) error {
+	userID := input.UserID
+	user, err := u.userRepo.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return ErrUserNotFound
+		}
+		if errors.Is(err, repositories.ErrFind) {
+			return ErrFindingRecord
+		}
+	}
+
+	if !hash.BCryptPasswordHasher().CheckPasswordHash(input.CurrPassword, user.PasswordHash) {
+		return ErrPassowrdNotMatched
+	}
+
+	if err := validatePassword(input.NewPassword); err != nil {
+		return err
+	}
+
+	hashedNewPassword, err := hash.BCryptPasswordHasher().HashPassword(input.NewPassword)
+	if err != nil {
+		return ErrHashingPassword
+	}
+
+	user.PasswordHash = hashedNewPassword
+	if err := u.userRepo.Update(user); err != nil {
+		return ErrUpdatingRecord
 	}
 
 	return nil
