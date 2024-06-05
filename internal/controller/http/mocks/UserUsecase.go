@@ -126,6 +126,24 @@ func (_m *UserUsecase) SignUp(_a0 usecase.SignUpInput) (*usecase.SignUpOutput, e
 	return r0, r1
 }
 
+// UpdatePassword provides a mock function with given fields: _a0
+func (_m *UserUsecase) UpdatePassword(_a0 usecase.UpdatePasswordInput) error {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePassword")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(usecase.UpdatePasswordInput) error); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewUserUsecase creates a new instance of UserUsecase. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUserUsecase(t interface {

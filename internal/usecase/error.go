@@ -13,7 +13,7 @@ var (
 	ErrUserNotFound              = errors.New("user not found")
 	ErrPasswordResetFlowNotFound = errors.New("password reset flow not found")
 	ErrPasswordResetFlowExpired  = errors.New("password reset flow is expired")
-	ErrPassowrdNotMatched        = errors.New("password is not matched")
+	ErrPasswordNotMatched        = errors.New("password is not matched")
 
 	ErrPasswordTooShort      = errors.New("password must be at least 8 characters long")
 	ErrPasswordNoUppercase   = errors.New("password must contain at least one uppercase letter")

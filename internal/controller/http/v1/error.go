@@ -20,7 +20,7 @@ var errorStatusMap = map[error]int{
 	usecase.ErrUserNotFound:              http.StatusBadRequest,
 	usecase.ErrPasswordResetFlowNotFound: http.StatusBadRequest,
 	usecase.ErrPasswordResetFlowExpired:  http.StatusBadRequest,
-	usecase.ErrPassowrdNotMatched:        http.StatusBadRequest,
+	usecase.ErrPasswordNotMatched:        http.StatusBadRequest,
 
 	usecase.ErrPasswordTooShort:      http.StatusBadRequest,
 	usecase.ErrPasswordNoUppercase:   http.StatusBadRequest,

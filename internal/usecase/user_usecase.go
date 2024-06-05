@@ -260,7 +260,7 @@ func (u *userUsecase) UpdatePassword(input UpdatePasswordInput) error {
 	}
 
 	if !hash.BCryptPasswordHasher().CheckPasswordHash(input.CurrPassword, user.PasswordHash) {
-		return ErrPassowrdNotMatched
+		return ErrPasswordNotMatched
 	}
 
 	if err := validatePassword(input.NewPassword); err != nil {

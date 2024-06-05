@@ -680,7 +680,7 @@ func TestUserUsecase_GetUserByID_DecryptionError(t *testing.T) {
 func TestUserUsecase_PatchUser_Success(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	userUsecase := &userUsecase{userRepo: userRepo}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
 
 	userID := uint(1)
 	input := &PatchUserInput{
@@ -724,7 +724,7 @@ func TestUserUsecase_PatchUser_Success(t *testing.T) {
 func TestUserUsecase_PatchUser_UserNotFound(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	userUsecase := &userUsecase{userRepo: userRepo}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
 
 	userID := uint(1)
 	input := &PatchUserInput{
@@ -748,7 +748,7 @@ func TestUserUsecase_PatchUser_UserNotFound(t *testing.T) {
 func TestUserUsecase_PatchUser_FindingRecordError(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	userUsecase := &userUsecase{userRepo: userRepo}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
 
 	userID := uint(1)
 	input := &PatchUserInput{
@@ -772,7 +772,7 @@ func TestUserUsecase_PatchUser_FindingRecordError(t *testing.T) {
 func TestUserUsecase_PatchUser_UpdatingRecordError(t *testing.T) {
 	// Setup
 	userRepo := &mocks.UserRepository{}
-	userUsecase := &userUsecase{userRepo: userRepo}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
 
 	userID := uint(1)
 	input := &PatchUserInput{
@@ -793,6 +793,202 @@ func TestUserUsecase_PatchUser_UpdatingRecordError(t *testing.T) {
 	// Assert
 	assert.Error(t, err)
 	assert.Equal(t, ErrUpdatingRecord, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_UpdatePassword_Success(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "newPassword1!",
+	}
+	hashedCurrPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.CurrPassword)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID: userID, PasswordHash: hashedCurrPassword}, nil)
+	userRepo.On("Update", mock.MatchedBy(func(user *entities.User) bool {
+		hashedNewPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.NewPassword)
+		return user.ID == userID && hash.BCryptPasswordHasher().CheckPasswordHash(input.NewPassword, hashedNewPassword)
+	})).Return(nil)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.NoError(t, err)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+}
+
+func TestUserUsecase_UpdatePassword_UserNotFound(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "newPassword1!",
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrNotFound)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrUserNotFound)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	userRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserUsecase_UpdatePassword_FindingRecordError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "newPassword1!",
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(nil, repositories.ErrFind)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrFindingRecord)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	userRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserUsecase_UpdatePassword_PasswordNotMatched(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "newPassword1!",
+	}
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID: userID, PasswordHash: "SOMETHINGINVALID"}, nil)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrPasswordNotMatched)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	userRepo.AssertNotCalled(t, "Update")
+}
+func TestUserUsecase_UpdatePassword_PasswordHashingFailed(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "TOOLONGtofkjsldfjdsSsddsDGFdsfsdfsdfdfsVjlfdkjgvljkfdjkPassword123456789!",
+	}
+	hashedCurrPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.CurrPassword)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID: userID, PasswordHash: hashedCurrPassword}, nil)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrHashingPassword)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	userRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserUsecase_UpdatePassword_InvalidPassword(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "short",
+	}
+	hashedCurrPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.CurrPassword)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID: userID, PasswordHash: hashedCurrPassword}, nil)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrPasswordTooShort)
+
+	// Verify
+	userRepo.AssertExpectations(t)
+	userRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserUsecase_UpdatePassword_UpdatingError(t *testing.T) {
+	// Setup
+	userRepo := &mocks.UserRepository{}
+	userUsecase := NewUserUsecase(userRepo, nil, nil, nil)
+
+	userID := uint(1)
+	input := UpdatePasswordInput{
+		UserID:       userID,
+		CurrPassword: "currentPassword1!",
+		NewPassword:  "newPassword1!",
+	}
+	hashedCurrPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.CurrPassword)
+
+	// Expectations
+	userRepo.On("FindByID", userID).Return(&entities.User{
+		ID: userID, PasswordHash: hashedCurrPassword}, nil)
+	userRepo.On("Update", mock.MatchedBy(func(user *entities.User) bool {
+		hashedNewPassword, _ := hash.BCryptPasswordHasher().HashPassword(input.NewPassword)
+		return user.ID == userID && hash.BCryptPasswordHasher().CheckPasswordHash(input.NewPassword, hashedNewPassword)
+	})).Return(repositories.ErrUpdate)
+
+	// Execute
+	err := userUsecase.UpdatePassword(input)
+
+	// Assert
+	assert.ErrorIs(t, err, ErrUpdatingRecord)
 
 	// Verify
 	userRepo.AssertExpectations(t)
