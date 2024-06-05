@@ -15,6 +15,7 @@ type UserController interface {
 	ResetPassword(c *gin.Context)
 	GetMyUserInfo(c *gin.Context)
 	PatchMyUser(c *gin.Context)
+	UpdatePassword(c *gin.Context)
 }
 
 type userController struct {
@@ -200,6 +201,42 @@ func (u *userController) PatchMyUser(c *gin.Context) {
 	}
 
 	res := PatchMyUserResponse{}
+	c.JSON(http.StatusOK, res)
+}
+
+// UpdatePassword godoc
+// @Summary      Update my user password
+// @Description  JWT 인증 토큰 기반 내 비밀번호 수정
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param request body UpdatePasswordRequest true "UpdatePassword Request"
+// @Success      200  {object}  UpdatePasswordResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Router       /api/v1/users/me/password [put]
+func (u *userController) UpdatePassword(c *gin.Context) {
+	var req UpdatePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		HandleError(c, ErrInvalidRequestBody)
+		return
+	}
+
+	userPayload := auth.GetUserPayload(c, u.jwtAuth.GinJWTMiddleware)
+
+	input := usecase.UpdatePasswordInput{
+		UserID:       userPayload.UserID,
+		CurrPassword: req.CurrPassword,
+		NewPassword:  req.NewPassword,
+	}
+
+	if err := u.userUsecase.UpdatePassword(input); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	res := UpdatePasswordResponse{}
 	c.JSON(http.StatusOK, res)
 }
 

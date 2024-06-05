@@ -49,6 +49,7 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 			userGroup.POST("/password/reset", userController.ResetPassword)
 			userGroup.GET("/me", jwtAuth.MiddlewareFunc(), userController.GetMyUserInfo)
 			userGroup.PATCH("/me", jwtAuth.MiddlewareFunc(), userController.PatchMyUser)
+			userGroup.PUT("/me/password", jwtAuth.MiddlewareFunc(), userController.UpdatePassword)
 		}
 
 		authGroup := apiV1.Group("/auth")

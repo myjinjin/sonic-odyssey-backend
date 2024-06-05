@@ -196,6 +196,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/users/me/password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "JWT 인증 토큰 기반 내 비밀번호 수정",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update my user password",
+                "parameters": [
+                    {
+                        "description": "UpdatePassword Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UpdatePasswordResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users/password/recovery": {
             "post": {
                 "description": "비밀번호 복구 이메일 전송",
@@ -406,7 +457,7 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8,
-                    "example": "password123"
+                    "example": "Password123!"
                 }
             }
         },
@@ -452,7 +503,7 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8,
-                    "example": "password123"
+                    "example": "Password123!"
                 }
             }
         },
@@ -464,6 +515,28 @@ const docTemplate = `{
                     "example": 1
                 }
             }
+        },
+        "v1.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "curr_password",
+                "new_password"
+            ],
+            "properties": {
+                "curr_password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "Password123!"
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "example": "NewPassword123!"
+                }
+            }
+        },
+        "v1.UpdatePasswordResponse": {
+            "type": "object"
         }
     }
 }`

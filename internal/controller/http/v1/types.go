@@ -12,7 +12,7 @@ func NewErrorResponse(err error) ErrorResponse {
 
 type SignUpRequest struct {
 	Email    string `json:"email" binding:"required,email" example:"user@example.com"`
-	Password string `json:"password" binding:"required,min=8" example:"password123"`
+	Password string `json:"password" binding:"required,min=8" example:"Password123!"`
 	Name     string `json:"name" binding:"required" example:"John Doe"`
 	Nickname string `json:"nickname" binding:"required" example:"johndoe"`
 }
@@ -28,7 +28,7 @@ type SendPasswordRecoveryEmailRequest struct {
 type SendPasswordRecoveryEmailResponse struct{}
 
 type ResetPasswordRequest struct {
-	Password string `json:"password" binding:"required,min=8" example:"password123"`
+	Password string `json:"password" binding:"required,min=8" example:"Password123!"`
 	FlowID   string `json:"flow_id" binding:"required" example:"cc833698-4519-4873-b9b4-67d6fef70dcb:1717170088"`
 }
 
@@ -52,3 +52,10 @@ type PatchMyUserRequest struct {
 }
 
 type PatchMyUserResponse struct{}
+
+type UpdatePasswordRequest struct {
+	CurrPassword string `json:"curr_password" binding:"required,min=8" example:"Password123!"`
+	NewPassword  string `json:"new_password" binding:"required,min=8" example:"NewPassword123!"`
+}
+
+type UpdatePasswordResponse struct{}
