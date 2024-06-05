@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -10,9 +11,12 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/encryption"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/logging"
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/repository_impls/postgresql"
+	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/spotifyclient"
 	v1 "github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/v1"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 func main() {
@@ -55,6 +59,20 @@ func main() {
 	if err != nil {
 		logging.Log().Fatal("failed to create email sender: ", zap.Error(err))
 	}
+
+	ctx := context.Background()
+	config := &clientcredentials.Config{
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		TokenURL:     spotifyauth.TokenURL,
+	}
+	token, err := config.Token(ctx)
+	if err != nil {
+		logging.Log().Fatal("failed to get spotify token: %v", zap.Error(err))
+	}
+
+	httpClient := spotifyauth.New().Client(ctx, token)
+	_ = spotifyclient.New(httpClient)
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
 	passwordResetRepo := postgresql.NewPasswordResetFlowRepository(db.GetDB())
