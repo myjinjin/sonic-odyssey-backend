@@ -14,9 +14,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/infrastructure/spotifyclient"
 	v1 "github.com/myjinjin/sonic-odyssey-backend/internal/controller/http/v1"
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 func main() {
@@ -61,18 +59,10 @@ func main() {
 	}
 
 	ctx := context.Background()
-	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-		TokenURL:     spotifyauth.TokenURL,
-	}
-	token, err := config.Token(ctx)
+	_, err = spotifyclient.New(ctx, os.Getenv("SPOTIFY_ID"), os.Getenv("SPOTIFY_SECRET"))
 	if err != nil {
-		logging.Log().Fatal("failed to get spotify token: %v", zap.Error(err))
+		logging.Log().Fatal("failed to create spotify client: ", zap.Error(err))
 	}
-
-	httpClient := spotifyauth.New().Client(ctx, token)
-	_ = spotifyclient.New(httpClient)
 
 	userRepo := postgresql.NewUserRepository(db.GetDB())
 	passwordResetRepo := postgresql.NewPasswordResetFlowRepository(db.GetDB())
