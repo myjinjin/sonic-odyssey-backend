@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	mockUserRepo    *mocks2.UserRepository
-	mockUserUsecase *mocks.UserUsecase
-	userJwt         auth.UserJWT
-	testUserJwtAuth *auth.JWTMiddleware
-	testRouter      *gin.Engine
+	mockUserRepo     *mocks2.UserRepository
+	mockUserUsecase  *mocks.UserUsecase
+	mockMusicUsecase *mocks.MusicUsecase
+	userJwt          auth.UserJWT
+	testUserJwtAuth  *auth.JWTMiddleware
+	testRouter       *gin.Engine
 )
 
 func TestMain(m *testing.M) {
@@ -26,7 +27,7 @@ func TestMain(m *testing.M) {
 	var err error
 	mockUserRepo = new(mocks2.UserRepository)
 	mockUserUsecase = new(mocks.UserUsecase)
-	mockMusicUsecase := new(mocks.MusicUsecase)
+	mockMusicUsecase = new(mocks.MusicUsecase)
 	userJwt = auth.NewUserJWT(mockUserRepo)
 	testUserJwtAuth, err = auth.NewJWTMiddleware(
 		auth.WithKey([]byte(os.Getenv("JWT_SECRET_KEY"))),
