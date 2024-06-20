@@ -33,3 +33,18 @@ type UpdatePasswordInput struct {
 	CurrPassword string
 	NewPassword  string
 }
+
+type SearchTrackOutput struct {
+	Tracks []Track
+}
+
+type Track struct {
+	ID      string
+	Name    string
+	Artists []Artist
+}
+
+type Artist struct {
+	ID   string
+	Name string
+}

@@ -31,4 +31,6 @@ var (
 	ErrFindingRecord  = repositories.ErrFind
 	ErrUpdatingRecord = repositories.ErrUpdate
 	ErrDeletingRecord = repositories.ErrDelete
+
+	ErrSearchingSpotify = errors.New("failed to search spotify")
 )
