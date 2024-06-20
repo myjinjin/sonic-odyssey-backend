@@ -14,7 +14,7 @@ import (
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase"
 )
 
-func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *gin.Engine {
+func SetupRouter(userUsecase usecase.UserUsecase, musicUsecase usecase.MusicUsecase, jwtAuth *auth.JWTMiddleware) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(func(c *gin.Context) {
@@ -39,6 +39,7 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 	})
 
 	userController := NewUserController(userUsecase, jwtAuth)
+	musicController := NewMusicController(musicUsecase, jwtAuth)
 
 	apiV1 := r.Group("/api/v1")
 	{
@@ -55,6 +56,11 @@ func SetupRouter(userUsecase usecase.UserUsecase, jwtAuth *auth.JWTMiddleware) *
 		authGroup := apiV1.Group("/auth")
 		{
 			authGroup.POST("/sign-in", jwtAuth.LoginHandler)
+		}
+
+		musicGroup := apiV1.Group("/music")
+		{
+			musicGroup.GET("/tracks", jwtAuth.MiddlewareFunc(), musicController.SearchTrack)
 		}
 	}
 

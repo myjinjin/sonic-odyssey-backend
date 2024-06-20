@@ -8,7 +8,7 @@ import (
 )
 
 type MusicUsecase interface {
-	SearchTrack(ctx context.Context, keyword string) (*SearchTrackOutput, error)
+	SearchTrack(ctx context.Context, keyword string, limit, offset *int) (*SearchTrackOutput, error)
 }
 
 type musicUsecase struct {
@@ -21,8 +21,13 @@ func NewMusicUsecase(ctx context.Context, spotifyClient spotifyclient.SpotifyCli
 	}
 }
 
-func (u *musicUsecase) SearchTrack(ctx context.Context, keyword string) (*SearchTrackOutput, error) {
-	searchResult, err := u.spotifyClient.Search(ctx, keyword, spotify.SearchTypeTrack)
+func (u *musicUsecase) SearchTrack(ctx context.Context, keyword string, limit, offset *int) (*SearchTrackOutput, error) {
+	opts := []spotify.RequestOption{}
+	if limit != nil && offset != nil {
+		opts = append(opts, spotify.Limit(*limit))
+		opts = append(opts, spotify.Offset(*offset))
+	}
+	searchResult, err := u.spotifyClient.Search(ctx, keyword, spotify.SearchTypeTrack, opts...)
 	if err != nil {
 		return nil, ErrSearchingSpotify
 	}

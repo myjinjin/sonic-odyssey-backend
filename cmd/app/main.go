@@ -59,7 +59,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	_, err = spotifyclient.New(ctx, os.Getenv("SPOTIFY_ID"), os.Getenv("SPOTIFY_SECRET"))
+	spotifyClient, err := spotifyclient.New(ctx, os.Getenv("SPOTIFY_ID"), os.Getenv("SPOTIFY_SECRET"))
 	if err != nil {
 		logging.Log().Fatal("failed to create spotify client: ", zap.Error(err))
 	}
@@ -67,6 +67,7 @@ func main() {
 	userRepo := postgresql.NewUserRepository(db.GetDB())
 	passwordResetRepo := postgresql.NewPasswordResetFlowRepository(db.GetDB())
 	userUsecase := usecase.NewUserUsecase(userRepo, passwordResetRepo, encryptor, emailSender)
+	musicUsecase := usecase.NewMusicUsecase(ctx, spotifyClient)
 	userJwt := auth.NewUserJWT(userRepo)
 
 	jwtAuth, err := auth.NewJWTMiddleware(
@@ -81,7 +82,7 @@ func main() {
 	if err != nil {
 		logging.Log().Fatal("failed to create jwt auth middleware: ", zap.Error(err))
 	}
-	router := v1.SetupRouter(userUsecase, jwtAuth)
+	router := v1.SetupRouter(userUsecase, musicUsecase, jwtAuth)
 
 	err = router.Run(":8081")
 	if err != nil {

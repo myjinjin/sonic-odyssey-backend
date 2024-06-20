@@ -26,6 +26,7 @@ func TestMain(m *testing.M) {
 	var err error
 	mockUserRepo = new(mocks2.UserRepository)
 	mockUserUsecase = new(mocks.UserUsecase)
+	mockMusicUsecase := new(mocks.MusicUsecase)
 	userJwt = auth.NewUserJWT(mockUserRepo)
 	testUserJwtAuth, err = auth.NewJWTMiddleware(
 		auth.WithKey([]byte(os.Getenv("JWT_SECRET_KEY"))),
@@ -39,6 +40,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		logging.Log().Fatal("failed to create jwt auth middleware.", zap.Error(err))
 	}
-	testRouter = SetupRouter(mockUserUsecase, testUserJwtAuth)
+	testRouter = SetupRouter(mockUserUsecase, mockMusicUsecase, testUserJwtAuth)
 	os.Exit(m.Run())
 }

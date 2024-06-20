@@ -59,3 +59,24 @@ type UpdatePasswordRequest struct {
 }
 
 type UpdatePasswordResponse struct{}
+
+type SearchTrackRequest struct {
+	Keyword string `form:"keyword" binding:"required" example:"One"`
+	Limit   *int   `form:"limit" example:"10"`
+	Offset  *int   `form:"offset" example:"10"`
+}
+
+type SearchTrackResponse struct {
+	Tracks []Track `json:"tracks"`
+}
+
+type Track struct {
+	ID      string   `json:"id" example:"2up3OPMp9Tb4dAKM2erWXQ"`
+	Name    string   `json:"name" example:"One"`
+	Artists []Artist `json:"artists"`
+}
+
+type Artist struct {
+	ID   string `json:"id" example:"2up3OPMp9Tb4dAKM2erWXQ"`
+	Name string `json:"name" example:"Aimee mann"`
+}

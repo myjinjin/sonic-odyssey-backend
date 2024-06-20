@@ -6,6 +6,7 @@ import (
 
 	"github.com/myjinjin/sonic-odyssey-backend/internal/usecase/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/zmb3/spotify/v2"
 )
 
@@ -17,10 +18,12 @@ func TestMusicUsecase_SearchTrack_Success(t *testing.T) {
 	musicUsecase := NewMusicUsecase(ctx, spotifyClient)
 
 	keyword := "One"
+	limit := 10
+	offset := 0
 	searchType := spotify.SearchTypeTrack
 
 	// Expectations
-	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType)).Return(&spotify.SearchResult{
+	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType), mock.AnythingOfType("spotify.RequestOption"), mock.AnythingOfType("spotify.RequestOption")).Return(&spotify.SearchResult{
 		Tracks: &spotify.FullTrackPage{
 			Tracks: []spotify.FullTrack{
 				{
@@ -40,7 +43,7 @@ func TestMusicUsecase_SearchTrack_Success(t *testing.T) {
 	}, nil)
 
 	// Execute
-	output, err := musicUsecase.SearchTrack(ctx, keyword)
+	output, err := musicUsecase.SearchTrack(ctx, keyword, &limit, &offset)
 
 	// Assert
 	assert.NoError(t, err)
@@ -59,13 +62,15 @@ func TestMusicUsecase_SearchTrack_SearchingSpotifyError(t *testing.T) {
 	musicUsecase := NewMusicUsecase(ctx, spotifyClient)
 
 	keyword := "One"
+	limit := 10
+	offset := 0
 	searchType := spotify.SearchTypeTrack
 
 	// Expectations
-	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType)).Return(nil, ErrSearchingSpotify)
+	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType), mock.AnythingOfType("spotify.RequestOption"), mock.AnythingOfType("spotify.RequestOption")).Return(nil, ErrSearchingSpotify)
 
 	// Execute
-	output, err := musicUsecase.SearchTrack(ctx, keyword)
+	output, err := musicUsecase.SearchTrack(ctx, keyword, &limit, &offset)
 
 	// Assert
 	assert.ErrorIs(t, err, ErrSearchingSpotify)
@@ -83,17 +88,19 @@ func TestMusicUsecase_SearchTrack_EmptyResult(t *testing.T) {
 	musicUsecase := NewMusicUsecase(ctx, spotifyClient)
 
 	keyword := "NonExistentTrack"
+	limit := 10
+	offset := 0
 	searchType := spotify.SearchTypeTrack
 
 	// Expectations
-	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType)).Return(&spotify.SearchResult{
+	spotifyClient.On("Search", ctx, keyword, spotify.SearchType(searchType), mock.AnythingOfType("spotify.RequestOption"), mock.AnythingOfType("spotify.RequestOption")).Return(&spotify.SearchResult{
 		Tracks: &spotify.FullTrackPage{
 			Tracks: []spotify.FullTrack{},
 		},
 	}, nil)
 
 	// Execute
-	output, err := musicUsecase.SearchTrack(ctx, keyword)
+	output, err := musicUsecase.SearchTrack(ctx, keyword, &limit, &offset)
 
 	// Assert
 	assert.NoError(t, err)
