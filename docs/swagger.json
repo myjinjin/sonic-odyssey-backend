@@ -50,6 +50,68 @@
                 }
             }
         },
+        "/api/v1/music/tracks": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "JWT 인증 토큰 기반 내 유저 정보 조회",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "music",
+                    "tracks"
+                ],
+                "summary": "search music track",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "One",
+                        "name": "keyword",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SearchTrackResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/users": {
             "post": {
                 "description": "User SignUp",
@@ -365,6 +427,19 @@
                 }
             }
         },
+        "v1.Artist": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "2up3OPMp9Tb4dAKM2erWXQ"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Aimee mann"
+                }
+            }
+        },
         "v1.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -453,6 +528,17 @@
         "v1.ResetPasswordResponse": {
             "type": "object"
         },
+        "v1.SearchTrackResponse": {
+            "type": "object",
+            "properties": {
+                "tracks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Track"
+                    }
+                }
+            }
+        },
         "v1.SendPasswordRecoveryEmailRequest": {
             "type": "object",
             "required": [
@@ -502,6 +588,25 @@
                 "user_id": {
                     "type": "integer",
                     "example": 1
+                }
+            }
+        },
+        "v1.Track": {
+            "type": "object",
+            "properties": {
+                "artists": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.Artist"
+                    }
+                },
+                "id": {
+                    "type": "string",
+                    "example": "2up3OPMp9Tb4dAKM2erWXQ"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "One"
                 }
             }
         },

@@ -23,6 +23,15 @@ definitions:
         example: incorrect Username or Password
         type: string
     type: object
+  v1.Artist:
+    properties:
+      id:
+        example: 2up3OPMp9Tb4dAKM2erWXQ
+        type: string
+      name:
+        example: Aimee mann
+        type: string
+    type: object
   v1.ErrorResponse:
     properties:
       error:
@@ -86,6 +95,13 @@ definitions:
     type: object
   v1.ResetPasswordResponse:
     type: object
+  v1.SearchTrackResponse:
+    properties:
+      tracks:
+        items:
+          $ref: '#/definitions/v1.Track'
+        type: array
+    type: object
   v1.SendPasswordRecoveryEmailRequest:
     properties:
       email:
@@ -122,6 +138,19 @@ definitions:
       user_id:
         example: 1
         type: integer
+    type: object
+  v1.Track:
+    properties:
+      artists:
+        items:
+          $ref: '#/definitions/v1.Artist'
+        type: array
+      id:
+        example: 2up3OPMp9Tb4dAKM2erWXQ
+        type: string
+      name:
+        example: One
+        type: string
     type: object
   v1.UpdatePasswordRequest:
     properties:
@@ -172,6 +201,46 @@ paths:
       summary: User Login
       tags:
       - auth
+  /api/v1/music/tracks:
+    get:
+      consumes:
+      - application/json
+      description: JWT 인증 토큰 기반 내 유저 정보 조회
+      parameters:
+      - example: One
+        in: query
+        name: keyword
+        required: true
+        type: string
+      - example: 10
+        in: query
+        name: limit
+        type: integer
+      - example: 10
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.SearchTrackResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: search music track
+      tags:
+      - music
+      - tracks
   /api/v1/users:
     post:
       consumes:
