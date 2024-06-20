@@ -9,7 +9,7 @@ import (
 )
 
 type SpotifyClient interface {
-	// TODO
+	Search(ctx context.Context, query string, t spotify.SearchType) (*spotify.SearchResult, error)
 }
 
 type spotifyClient struct {
@@ -32,4 +32,12 @@ func New(ctx context.Context, clientID, clientSecret string) (SpotifyClient, err
 	return &spotifyClient{
 		client: client,
 	}, nil
+}
+
+func (c *spotifyClient) Search(ctx context.Context, query string, t spotify.SearchType) (*spotify.SearchResult, error) {
+	result, err := c.client.Search(ctx, query, t)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
