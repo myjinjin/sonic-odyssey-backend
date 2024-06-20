@@ -68,6 +68,7 @@ type SearchTrackRequest struct {
 
 type SearchTrackResponse struct {
 	Tracks []Track `json:"tracks"`
+	Total  int     `json:"total" example:"12"`
 }
 
 type Track struct {

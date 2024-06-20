@@ -36,6 +36,7 @@ type UpdatePasswordInput struct {
 
 type SearchTrackOutput struct {
 	Tracks []Track
+	Total  int
 }
 
 type Track struct {

@@ -97,6 +97,9 @@ definitions:
     type: object
   v1.SearchTrackResponse:
     properties:
+      total:
+        example: 12
+        type: integer
       tracks:
         items:
           $ref: '#/definitions/v1.Track'

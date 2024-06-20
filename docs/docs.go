@@ -542,6 +542,10 @@ const docTemplate = `{
         "v1.SearchTrackResponse": {
             "type": "object",
             "properties": {
+                "total": {
+                    "type": "integer",
+                    "example": 12
+                },
                 "tracks": {
                     "type": "array",
                     "items": {

@@ -34,6 +34,7 @@ func (u *musicUsecase) SearchTrack(ctx context.Context, keyword string, limit, o
 
 	searchOutput := new(SearchTrackOutput)
 	tracks := make([]Track, len(searchResult.Tracks.Tracks))
+	total := searchResult.Tracks.Total
 	for i, t := range searchResult.Tracks.Tracks {
 		tracks[i] = Track{ID: string(t.ID), Name: t.Name}
 		artists := []Artist{}
@@ -44,5 +45,6 @@ func (u *musicUsecase) SearchTrack(ctx context.Context, keyword string, limit, o
 	}
 
 	searchOutput.Tracks = tracks
+	searchOutput.Total = int(total)
 	return searchOutput, nil
 }

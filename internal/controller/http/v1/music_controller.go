@@ -50,6 +50,7 @@ func (m *musicController) SearchTrack(c *gin.Context) {
 	}
 
 	tracks := make([]Track, len(output.Tracks))
+	total := output.Total
 	for i, t := range output.Tracks {
 		track := Track{ID: t.ID, Name: t.Name}
 		artists := make([]Artist, len(t.Artists))
@@ -60,6 +61,6 @@ func (m *musicController) SearchTrack(c *gin.Context) {
 		tracks[i] = track
 	}
 
-	res := SearchTrackResponse{Tracks: tracks}
+	res := SearchTrackResponse{Tracks: tracks, Total: total}
 	c.JSON(http.StatusOK, res)
 }
